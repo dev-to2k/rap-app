@@ -40,7 +40,7 @@ export default async function HomePage() {
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Beats đang bán</h1>
-          <p className="mt-1 text-[color:var(--muted)]">Marketplace beat VN · take-rate 15%</p>
+          <p className="mt-1 text-[color:var(--muted)]">Chợ beat VN — lease / WAV+stems / exclusive</p>
         </div>
         <Link
           href="/upload"

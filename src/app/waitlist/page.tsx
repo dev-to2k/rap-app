@@ -51,6 +51,9 @@ function WaitlistForm() {
         <Link href="/" className="inline-block text-sm text-emerald-400 hover:underline">
           ← Về chợ beat
         </Link>
+        <p className="pt-4 text-left text-[11px] leading-relaxed text-zinc-500">
+Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
+        </p>
       </div>
     );
   }
@@ -118,6 +121,10 @@ function WaitlistForm() {
           {loading ? "Đang gửi…" : "Xin early access"}
         </button>
       </form>
+
+      <p className="text-[11px] leading-relaxed text-zinc-500">
+        Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
+      </p>
     </div>
   );
 }
