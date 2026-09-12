@@ -9,7 +9,7 @@ export const LICENSE_CLAUSES = [
   "1. Credit: Buyer ghi credit producer đúng tên listing trên release công khai (trừ khi Exclusive thỏa thuận khác ghi trong PDF).",
   "2. No-resale: Cấm bán lại / chuyển nhượng / sublicense beat, stem, hoặc license; không claim ownership master hay publishing.",
   "3. Sample warrant: Producer xác nhận đã khai sample; Rap App không clear mẫu; rủi ro uncleared thuộc producer/buyer theo luật áp dụng.",
-  "4. Exclusive: SKU Exclusive = độc quyền theo territory/term trên PDF; sau bán platform delist + khóa lease; conflict → freeze + Legal review (SLA 24h).",
+  "4. Exclusive: SKU Exclusive = độc quyền theo territory/term trên PDF; sau bán platform delist + khóa lease; conflict -> freeze + Legal review (SLA 24h).",
   "5. Scope lease: Chỉ quyền dùng theo SKU đã mua (commercial/non theo dòng SKU); không bao gồm stems trừ khi SKU ghi rõ.",
 ] as const;
 
