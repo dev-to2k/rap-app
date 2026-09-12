@@ -10,13 +10,10 @@ export function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
 }
 
-/** Local/dev mocks OK; never on Vercel production. Preview needs ALLOW_PAYMENT_MOCKS=true. */
+/** Mocks only when NODE_ENV!==production AND ALLOW_PAYMENT_MOCKS==="true". */
 export function allowPaymentMocks(): boolean {
-  if (process.env.VERCEL_ENV === "production") return false;
-  if (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production") return false;
-  if (process.env.ALLOW_PAYMENT_MOCKS === "true") return true;
-  if (process.env.VERCEL_ENV === "preview") return false;
-  return process.env.NODE_ENV !== "production";
+  if (process.env.NODE_ENV === "production") return false;
+  return process.env.ALLOW_PAYMENT_MOCKS === "true";
 }
 
 function isWeakSecret(s: string | undefined, defaults: string[]): boolean {
@@ -27,9 +24,9 @@ function isWeakSecret(s: string | undefined, defaults: string[]): boolean {
 
 export function getSessionSecret(): string {
   const s = process.env.SESSION_SECRET?.trim() ?? "";
-  if (isProductionRuntime() || process.env.VERCEL_ENV === "preview") {
+  if (isProductionRuntime()) {
     if (isWeakSecret(s, [DEFAULT_SESSION, EXAMPLE_SESSION]) || s.length < 32) {
-      throw new Error("SESSION_SECRET missing/default — refuse auth secrets in deploy");
+      throw new Error("SESSION_SECRET missing/default — refuse auth secrets in production");
     }
     return s;
   }
@@ -40,11 +37,12 @@ export function assertSessionSecret(): string {
   return getSessionSecret();
 }
 
-export function getWebhookSecret(): string {
+/** Returns null when secret is missing/default in production (fail closed, no throw). */
+export function getWebhookSecret(): string | null {
   const s = process.env.WEBHOOK_SECRET?.trim() ?? "";
-  if (isProductionRuntime() || process.env.VERCEL_ENV === "preview") {
+  if (isProductionRuntime()) {
     if (isWeakSecret(s, [DEFAULT_WEBHOOK, EXAMPLE_WEBHOOK]) || s.includes("dev-webhook")) {
-      throw new Error("WEBHOOK_SECRET missing/default — refuse webhooks in deploy");
+      return null;
     }
     return s;
   }
@@ -52,12 +50,14 @@ export function getWebhookSecret(): string {
 }
 
 export function assertWebhookSecret(): string {
-  return getWebhookSecret();
+  const s = getWebhookSecret();
+  if (!s) throw new Error("WEBHOOK_SECRET missing/default — refuse webhooks in production");
+  return s;
 }
 
 export function getDownloadSecret(): string {
   const s = process.env.DOWNLOAD_HMAC_SECRET?.trim() ?? "";
-  if (isProductionRuntime() || process.env.VERCEL_ENV === "preview") {
+  if (isProductionRuntime()) {
     if (isWeakSecret(s, [DEFAULT_DOWNLOAD]) || s.includes("change-me")) {
       throw new Error("DOWNLOAD_HMAC_SECRET missing/default");
     }
@@ -98,7 +98,7 @@ export function clientIp(headers: Headers): string {
 }
 
 export function sessionCookieSecure(): boolean {
-  if (isProductionRuntime() || process.env.VERCEL === "1") return true;
+  if (isProductionRuntime()) return true;
   const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
   return appUrl.startsWith("https://");
 }
