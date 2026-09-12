@@ -1,7 +1,34 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
 import path from "path";
 import { SKU_LABELS, formatVnd } from "./config";
+
+/** Legal MVP clauses — exact wording from Legal/Product; do not paraphrase. */
+export const LICENSE_CLAUSES = [
+  "1. Credit: Buyer ghi credit producer đúng tên listing trên release công khai (trừ khi Exclusive thỏa thuận khác ghi trong PDF).",
+  "2. No-resale: Cấm bán lại / chuyển nhượng / sublicense beat, stem, hoặc license; không claim ownership master hay publishing.",
+  "3. Sample warrant: Producer xác nhận đã khai sample; Rap App không clear mẫu; rủi ro uncleared thuộc producer/buyer theo luật áp dụng.",
+  "4. Exclusive: SKU Exclusive = độc quyền theo territory/term trên PDF; sau bán platform delist + khóa lease; conflict → freeze + Legal review (SLA 24h).",
+  "5. Scope lease: Chỉ quyền dùng theo SKU đã mua (commercial/non theo dòng SKU); không bao gồm stems trừ khi SKU ghi rõ.",
+] as const;
+
+function wrapText(text: string, font: { widthOfTextAtSize: (t: string, s: number) => number }, size: number, maxWidth: number): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (font.widthOfTextAtSize(next, size) <= maxWidth) {
+      line = next;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
 
 export async function generateLicensePdf(opts: {
   licenseId: string;
@@ -13,52 +40,81 @@ export async function generateLicensePdf(opts: {
   amountVnd: number;
   sampleFlag: string;
   orderId: string;
+  territory?: string;
+  term?: string;
 }): Promise<string> {
   const dir = path.join(process.cwd(), "storage", "licenses");
   fs.mkdirSync(dir, { recursive: true });
   const pdfPath = path.join(dir, `${opts.licenseId}.pdf`);
 
   const doc = await PDFDocument.create();
-  const page = doc.addPage([612, 792]);
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  let y = 740;
-  const draw = (text: string, size = 11, f = font, color = rgb(0.2, 0.2, 0.2)) => {
-    page.drawText(text, { x: 50, y, size, font: f, color, maxWidth: 512 });
-    y -= size + 8;
+  doc.registerFontkit(fontkit);
+  const fontBytes = fs.readFileSync(path.join(process.cwd(), "assets/fonts/NotoSans-Regular.ttf"));
+  const font = await doc.embedFont(fontBytes, { subset: true });
+
+  let page = doc.addPage([612, 792]);
+  let y = 750;
+  const maxWidth = 512;
+  const left = 50;
+  const bottom = 50;
+
+  const ensureSpace = (need: number) => {
+    if (y - need < bottom) {
+      page = doc.addPage([612, 792]);
+      y = 750;
+    }
   };
 
-  draw("RAP APP — LICENSE CERTIFICATE", 18, bold, rgb(0, 0, 0));
+  const drawLines = (text: string, size = 10, color = rgb(0.15, 0.15, 0.15), gap = 4) => {
+    const lines = wrapText(text, font, size, maxWidth);
+    for (const line of lines) {
+      ensureSpace(size + gap);
+      page.drawText(line, { x: left, y, size, font, color });
+      y -= size + gap;
+    }
+  };
+
+  drawLines("RAP APP — LICENSE CERTIFICATE", 16, rgb(0, 0, 0), 6);
+  y -= 6;
+
+  // Dynamic fields
+  drawLines(`License ID: ${opts.licenseId}`);
+  drawLines(`Order ID: ${opts.orderId}`);
+  drawLines(`Timestamp: ${new Date().toISOString()}`);
+  drawLines(`SKU: ${SKU_LABELS[opts.sku] || opts.sku}`);
+  drawLines(`Buyer: ${opts.buyerName} <${opts.buyerEmail}>`);
+  drawLines(`Producer: ${opts.producerName}`);
+  drawLines(`Beat: ${opts.beatTitle}`);
+  drawLines(`Amount paid: ${formatVnd(opts.amountVnd)}`);
+  drawLines(`Sample declaration: ${opts.sampleFlag}`);
+  drawLines(`Territory: ${opts.territory || "Worldwide (unless stated otherwise)"}`);
+  drawLines(`Term: ${opts.term || (opts.sku === "exclusive" ? "Per Exclusive terms on this license" : "Per SKU lease terms")}`);
   y -= 8;
-  draw(`License ID: ${opts.licenseId}`);
-  draw(`Order ID: ${opts.orderId}`);
-  draw(`Date: ${new Date().toISOString()}`);
-  y -= 6;
-  draw(`Beat: ${opts.beatTitle}`);
-  draw(`Producer: ${opts.producerName}`);
-  draw(`Licensee: ${opts.buyerName} <${opts.buyerEmail}>`);
-  draw(`SKU: ${SKU_LABELS[opts.sku] || opts.sku}`);
-  draw(`Amount paid: ${formatVnd(opts.amountVnd)}`);
-  draw(`Sample clearance: ${opts.sampleFlag}`);
-  y -= 6;
 
   if (opts.sampleFlag === "uncleared") {
-    const note =
-      "DISCLAIMER: Uncleared samples. Commercial release may need extra clearance. Exclusive not available. Rap App/producer disclaim sample claims.";
-    page.drawText(note, { x: 50, y, size: 9, font, color: rgb(0.7, 0.35, 0.05), maxWidth: 512, lineHeight: 12 });
-    y -= 48;
+    drawLines(
+      "DISCLAIMER (uncleared): Beat có sample chưa clear — chỉ bán lease; không bán Exclusive. Watermark/disclaimer áp dụng theo policy MVP.",
+      9,
+      rgb(0.65, 0.35, 0.05),
+      3,
+    );
+    y -= 6;
   }
 
-  if (opts.sku === "lease") draw("Rights: Non-exclusive MP3 lease. Limited commercial use. Producer retains ownership.");
-  else if (opts.sku === "wav") draw("Rights: Non-exclusive WAV + stems lease. Broader commercial use. Producer retains ownership.");
-  else if (opts.sku === "exclusive") draw("Rights: Exclusive ownership transfer. Beat delisted. Unique sale.");
+  drawLines("TERMS (Legal MVP — fixed template)", 12, rgb(0, 0, 0), 6);
+  y -= 4;
+  for (const clause of LICENSE_CLAUSES) {
+    drawLines(clause, 9, rgb(0.2, 0.2, 0.2), 3);
+    y -= 6;
+  }
 
-  page.drawText("Generated by Rap App MVP — VN beat marketplace", {
-    x: 50,
-    y: 40,
-    size: 9,
+  ensureSpace(20);
+  page.drawText("Generated by Rap App MVP — VN beat marketplace ($0 template)", {
+    x: left,
+    y: 36,
+    size: 8,
     font,
-    color: rgb(0.4, 0.4, 0.4),
+    color: rgb(0.45, 0.45, 0.45),
   });
 
   const bytes = await doc.save();
