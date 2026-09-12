@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/webhook";
 import { unlockOrder } from "@/lib/unlock";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const raw = await req.text();
   const sig = req.headers.get("x-webhook-signature");

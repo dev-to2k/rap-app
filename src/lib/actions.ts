@@ -9,7 +9,7 @@ export async function createOrderAction(beatId: string, sku: "lease" | "wav" | "
   if (!session) throw new Error("UNAUTHORIZED");
 
   const beat = await prisma.beat.findUnique({ where: { id: beatId } });
-  if (!beat || beat.status !== "listed") throw new Error("UNAVAILABLE");
+  if (!beat || beat.status !== "available") throw new Error("UNAVAILABLE");
   if (sku === "exclusive" && beat.sampleFlag === "uncleared") {
     throw new Error("EXCLUSIVE_FORBIDDEN");
   }

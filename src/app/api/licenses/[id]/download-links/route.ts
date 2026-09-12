@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { createDownloadToken } from "@/lib/signed-url";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Login required" }, { status: 401 });

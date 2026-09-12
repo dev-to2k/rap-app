@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { signWebhookBody } from "@/lib/webhook";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({
   paymentMethod: z.enum(["momo", "vnpay", "ck"]),
   /** Mock: if true, auto-fire signed webhook (simulator) */

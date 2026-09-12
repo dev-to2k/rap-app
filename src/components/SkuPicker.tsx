@@ -26,8 +26,8 @@ export function SkuPicker({
   loggedIn,
 }: Props) {
   const [sku, setSku] = useState<"lease" | "wav" | "exclusive">("lease");
-  const exclusiveDisabled = sampleFlag === "uncleared" || status !== "listed";
-  const buyDisabled = status !== "listed" || (sku === "exclusive" && exclusiveDisabled);
+  const exclusiveDisabled = sampleFlag === "uncleared" || status !== "available";
+  const buyDisabled = status !== "available" || (sku === "exclusive" && exclusiveDisabled);
 
   return (
     <div className="space-y-3 pb-20">

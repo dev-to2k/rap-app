@@ -5,6 +5,8 @@ import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 
+export const dynamic = "force-dynamic";
+
 const ALLOWED = new Set(["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave"]);
 
 export async function POST(req: NextRequest) {

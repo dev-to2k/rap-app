@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { getEffectiveTakeRateBps } from "@/lib/take-rate";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({
   beatId: z.string().min(1),
   sku: z.enum(["lease", "wav", "exclusive"]),
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
   const beat = await prisma.beat.findUnique({ where: { id: parsed.data.beatId } });
-  if (!beat || beat.status !== "listed") {
+  if (!beat || beat.status !== "available") {
     return NextResponse.json({ error: "Beat unavailable" }, { status: 400 });
   }
   if (parsed.data.sku === "exclusive" && beat.sampleFlag === "uncleared") {

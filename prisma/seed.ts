@@ -22,6 +22,7 @@ async function ensurePlaceholderAudio() {
 async function main() {
   await ensurePlaceholderAudio();
 
+  await prisma.waitlistSignup.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.license.deleteMany();
   await prisma.order.deleteMany();

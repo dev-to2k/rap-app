@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { getEffectiveTakeRateBps } from "@/lib/take-rate";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({
   beatId: z.string().min(1),
   sku: z.enum(["lease", "wav", "exclusive"]),

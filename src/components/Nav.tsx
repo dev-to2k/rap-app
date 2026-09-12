@@ -11,6 +11,7 @@ export async function Nav() {
         </Link>
         <nav className="flex items-center gap-3 text-sm text-zinc-300">
           <Link href="/" className="hover:text-white">Beats</Link>
+          <Link href="/waitlist" className="text-zinc-500 hover:text-zinc-300">Waitlist</Link>
           <Link href="/upload" className="hover:text-white">Đăng beat</Link>
           <Link href="/library" className="hover:text-white">Library</Link>
           <Link href="/support" className="hover:text-white">Support</Link>
