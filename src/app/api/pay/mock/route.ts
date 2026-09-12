@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { signWebhookBody } from "@/lib/webhook";
+import { allowPaymentMocks } from "@/lib/security";
+import { releaseExclusiveReserve } from "@/lib/orders";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +16,13 @@ const schema = z.object({
 
 /**
  * Mock MoMo/VNPay/CK: marks pending, then POSTs signed webhook stub to unlock.
- * In real life the PSP calls our webhook; here we self-call after "pay".
+ * Disabled when NODE_ENV===production or ALLOW_PAYMENT_MOCKS!=="true".
  */
 export async function POST(req: NextRequest) {
+  if (!allowPaymentMocks()) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Cần đăng nhập" }, { status: 401 });
 
@@ -37,6 +43,9 @@ export async function POST(req: NextRequest) {
       where: { id: order.id },
       data: { status: "failed" },
     });
+    if (order.sku === "exclusive") {
+      await releaseExclusiveReserve(order.beatId);
+    }
     return NextResponse.json({ order: failed, paid: false });
   }
 
@@ -52,7 +61,7 @@ export async function POST(req: NextRequest) {
   };
   const { raw, signature } = signWebhookBody(payload);
 
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
   const wh = await fetch(`${base}/api/webhooks/payment`, {
     method: "POST",
     headers: {

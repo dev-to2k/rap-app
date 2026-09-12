@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
+import { resolvePreviewMp3 } from "@/lib/preview-audio";
 
-/** Serve local storage audio for preview (stub — use CDN/R2 signed URLs in prod) */
+/** Serve local storage audio for preview — ONLY .mp3 under storage/audio/ */
 export async function GET(_req: NextRequest, { params }: { params: { path: string[] } }) {
   const rel = params.path.join("/");
-  if (rel.includes("..")) return NextResponse.json({ error: "bad path" }, { status: 400 });
-  const filePath = path.join(process.cwd(), "storage", rel);
-  if (!filePath.startsWith(path.join(process.cwd(), "storage"))) {
-    return NextResponse.json({ error: "bad path" }, { status: 400 });
+  const resolved = resolvePreviewMp3(rel.startsWith("storage/") ? rel : `storage/${rel}`);
+  if (!resolved.ok) {
+    return NextResponse.json(
+      { error: resolved.reason === "missing" ? "not found" : "bad path" },
+      { status: resolved.reason === "missing" ? 404 : 400 }
+    );
   }
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
-  const data = fs.readFileSync(filePath);
+  const data = fs.readFileSync(resolved.abs);
   return new NextResponse(data, {
     headers: {
       "Content-Type": "audio/mpeg",

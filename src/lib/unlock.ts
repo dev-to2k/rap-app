@@ -6,7 +6,7 @@ import path from "path";
  * Idempotent unlock after verified webhook:
  * - amount/order already matched by caller
  * - creates license + PDF once
- * - exclusive: atomic sold WHERE status=available + delist + audit
+ * - exclusive: atomic sold WHERE status in (reserved, available) + delist + audit
  */
 export async function unlockOrder(orderId: string) {
   return prisma.$transaction(async (tx) => {
@@ -27,9 +27,9 @@ export async function unlockOrder(orderId: string) {
     }
 
     if (order.sku === "exclusive") {
-      // Atomic: only succeed if still available
+      // Atomic: only succeed if reserved (checkout) or still available
       const updated = await tx.beat.updateMany({
-        where: { id: order.beatId, status: "available", sampleFlag: "clean" },
+        where: { id: order.beatId, status: { in: ["available", "reserved"] }, sampleFlag: "clean" },
         data: { status: "sold_exclusive" },
       });
       if (updated.count !== 1) {

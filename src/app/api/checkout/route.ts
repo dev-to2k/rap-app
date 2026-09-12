@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { getEffectiveTakeRateBps } from "@/lib/take-rate";
+import { createMarketplaceOrder, OrderError } from "@/lib/orders";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -20,37 +19,28 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
 
-  const beat = await prisma.beat.findUnique({ where: { id: parsed.data.beatId } });
-  if (!beat || beat.status !== "available") {
-    return NextResponse.json({ error: "Beat không còn bán", code: "BEAT_UNAVAILABLE" }, { status: 409 });
-  }
-  if (parsed.data.sku === "exclusive" && beat.sampleFlag === "uncleared") {
-    return NextResponse.json(
-      { error: "Không bán Exclusive khi sample chưa clear", code: "EXCLUSIVE_FORBIDDEN_UNCLEARED" },
-      { status: 400 }
-    );
-  }
-
-  const amountVnd =
-    parsed.data.sku === "lease"
-      ? beat.priceLease
-      : parsed.data.sku === "wav"
-        ? beat.priceWav
-        : beat.priceExclusive;
-
-  const takeRateBps = await getEffectiveTakeRateBps();
-
-  const order = await prisma.order.create({
-    data: {
+  try {
+    const order = await createMarketplaceOrder({
       buyerId: user.id,
-      beatId: beat.id,
+      beatId: parsed.data.beatId,
       sku: parsed.data.sku,
-      amountVnd,
-      takeRateBps,
-      status: "pending",
       paymentMethod: parsed.data.paymentMethod,
-    },
-  });
-
-  return NextResponse.json({ order });
+    });
+    return NextResponse.json({ order });
+  } catch (e) {
+    const code = e instanceof OrderError ? e.code : e instanceof Error ? e.message : "";
+    if (code === "EXCLUSIVE_CONFLICT") {
+      return NextResponse.json({ error: "EXCLUSIVE_CONFLICT", code: "EXCLUSIVE_CONFLICT" }, { status: 409 });
+    }
+    if (code === "BEAT_UNAVAILABLE") {
+      return NextResponse.json({ error: "Beat không còn bán", code: "BEAT_UNAVAILABLE" }, { status: 409 });
+    }
+    if (code === "EXCLUSIVE_FORBIDDEN_UNCLEARED") {
+      return NextResponse.json(
+        { error: "Không bán Exclusive khi sample chưa clear", code: "EXCLUSIVE_FORBIDDEN_UNCLEARED" },
+        { status: 400 }
+      );
+    }
+    throw e;
+  }
 }

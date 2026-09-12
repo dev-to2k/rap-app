@@ -2,7 +2,8 @@
 // Set DATABASE_URL=postgresql://...?sslmode=require
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -35,7 +36,7 @@ model Beat {
   priceLease     Int        // VND
   priceWav       Int
   priceExclusive Int
-  status         String     @default("available") // available | sold_exclusive | delisted
+  status         String     @default("available") // available | reserved | sold_exclusive | delisted
   producerId     String
   producer       User       @relation(fields: [producerId], references: [id])
   createdAt      DateTime   @default(now())

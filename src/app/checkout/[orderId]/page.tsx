@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/config";
 
@@ -14,47 +14,88 @@ type Order = {
 };
 
 export default function CheckoutPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const params = useParams();
   const router = useRouter();
+  const orderId = useMemo(() => {
+    const raw = params?.orderId;
+    return Array.isArray(raw) ? raw[0] : raw || "";
+  }, [params]);
+
   const [order, setOrder] = useState<Order | null>(null);
-  const [msg, setMsg] = useState("Đang xác nhận thanh toán…");
+  const [msg, setMsg] = useState("Chọn Thanh toán MoMo để tiếp tục");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    // lightweight poll via license endpoint for status
-    fetch(`/api/license/${orderId}`)
-      .then(async (r) => {
-        const d = await r.json();
-        if (r.ok) {
-          setOrder(d.order);
-          setMsg("Thanh toán OK");
-        } else if (d.status === "pending" || d.status === "failed" || d.error) {
-          // fetch order via checkout recreate not available — keep pending UI
-          setOrder({ id: orderId, status: d.status || "pending", amountVnd: 0, sku: "", paymentMethod: null });
-          if (d.status === "failed") setMsg("Chưa thanh toán — file chưa mở.");
+    if (!orderId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : {};
+        if (cancelled) return;
+        if (res.status === 401) {
+          router.push("/login?next=" + encodeURIComponent(`/checkout/${orderId}`));
+          return;
         }
-      })
-      .catch(() => {});
-  }, [orderId]);
+        if (res.ok && data.order) {
+          setOrder(data.order);
+          if (data.order.status === "unlocked") setMsg("Thanh toán OK");
+          else if (data.order.status === "failed") setMsg("Chưa thanh toán — file chưa mở.");
+          else setMsg("Đang chờ thanh toán…");
+        }
+      } catch {
+        if (!cancelled) setMsg("Không tải được đơn — thử lại");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, router]);
 
   async function mockPay(fail = false) {
+    if (!orderId) return;
     setBusy(true);
     setMsg("Đang xác nhận thanh toán…");
-    const res = await fetch("/api/pay/mock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, fail }),
-    });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok || data.paid === false || data.order?.status === "failed") {
-      setMsg("Chưa thanh toán — file chưa mở.");
-      setOrder(data.order || null);
-      return;
+    try {
+      const res = await fetch("/api/pay/mock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, fail }),
+      });
+      const text = await res.text();
+      let data: {
+        paid?: boolean;
+        order?: Order;
+        error?: string;
+      } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        setMsg("Lỗi thanh toán — thử lại");
+        return;
+      }
+      if (res.status === 401) {
+        router.push("/login?next=" + encodeURIComponent(`/checkout/${orderId}`));
+        return;
+      }
+      if (res.status === 404) {
+        setMsg(data.error || "Mock pay tắt trên môi trường này");
+        return;
+      }
+      if (!res.ok || data.paid === false || data.order?.status === "failed") {
+        setMsg(data.error || "Chưa thanh toán — file chưa mở.");
+        if (data.order) setOrder(data.order);
+        return;
+      }
+      setMsg("Thanh toán OK");
+      if (data.order) setOrder(data.order);
+      router.push(`/orders/${orderId}/success`);
+    } catch {
+      setMsg("Mạng lỗi — thử lại");
+    } finally {
+      setBusy(false);
     }
-    setMsg("Thanh toán OK");
-    setOrder(data.order);
-    router.push(`/orders/${orderId}/success`);
   }
 
   return (
@@ -64,19 +105,24 @@ export default function CheckoutPage() {
         <p className="text-zinc-400">Order: {orderId}</p>
         {order?.amountVnd ? <p className="mt-2 text-lg">{formatVnd(order.amountVnd)}</p> : null}
         <p className="mt-4 text-sm">{msg}</p>
+        <p className="mt-4 text-xs leading-relaxed text-zinc-400">
+          Thanh toán vào <strong className="text-zinc-200">ví nền tảng</strong> Rap App (MoMo gắn merchant). Đây không
+          phải chuyển trực tiếp cho producer. Sau khi thanh toán thành công, bạn nhận license PDF + file theo đúng gói
+          đã mua. Phí nền tảng (15%, seed 12%) đã gồm trong giá — producer nhận phần còn lại theo chính sách payout.
+        </p>
         <div className="mt-6 flex flex-col gap-2">
           <button
             type="button"
-            disabled={busy}
-            onClick={() => mockPay(false)}
-            className="rounded-lg bg-emerald-600 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50"
+            disabled={busy || !orderId}
+            onClick={() => void mockPay(false)}
+            className="rounded-lg bg-[color:var(--accent)] py-2 font-medium text-[#0B0B0C] hover:opacity-90 disabled:opacity-50"
           >
-            Mock pay (MoMo/VNPay/CK OK)
+            Thanh toán MoMo
           </button>
           <button
             type="button"
-            disabled={busy}
-            onClick={() => mockPay(true)}
+            disabled={busy || !orderId}
+            onClick={() => void mockPay(true)}
             className="rounded-lg bg-zinc-800 py-2 text-sm hover:bg-zinc-700 disabled:opacity-50"
           >
             Mock fail

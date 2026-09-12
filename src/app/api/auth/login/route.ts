@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { setSession, verifyPassword } from "@/lib/auth";
+import { clientIp, rateLimit } from "@/lib/security";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,13 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
+
+  const ip = clientIp(req.headers);
+  const email = parsed.data.email.toLowerCase();
+  if (!rateLimit(`login:${ip}:${email}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many login attempts" }, { status: 429, headers: { "Retry-After": "60" } });
+  }
+
   const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
   if (!user || !(await verifyPassword(parsed.data.password, user.password))) {
     return NextResponse.json({ error: "Sai email hoặc mật khẩu" }, { status: 401 });

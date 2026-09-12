@@ -3,11 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const METHODS = [
-  { id: "momo", label: "MoMo (stub)" },
-  { id: "vnpay", label: "VNPay (stub)" },
-  { id: "ck", label: "Chuyển khoản (stub)" },
-] as const;
+const PLATFORM_PAY_DISCLAIMER =
+  "Thanh toán vào ví nền tảng Rap App (MoMo gắn merchant). Đây không phải chuyển trực tiếp cho producer. Sau khi thanh toán thành công, bạn nhận license PDF + file theo đúng gói đã mua. Phí nền tảng (15%, seed 12%) đã gồm trong giá — producer nhận phần còn lại theo chính sách payout.";
 
 export function CheckoutPay({
   orderId,
@@ -17,7 +14,6 @@ export function CheckoutPay({
   amountLabel: string;
 }) {
   const router = useRouter();
-  const [method, setMethod] = useState<"momo" | "vnpay" | "ck">("momo");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,12 +23,12 @@ export function CheckoutPay({
     const res = await fetch(`/api/orders/${orderId}/pay`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentMethod: method, simulateWebhook: true }),
+      body: JSON.stringify({ paymentMethod: "momo", simulateWebhook: true }),
     });
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setError(data.error || "Pay failed");
+      setError(data.error || "Thanh toán thất bại");
       return;
     }
     const licenseId = data.order?.license?.id || data.webhookResult?.licenseId;
@@ -41,37 +37,30 @@ export function CheckoutPay({
       router.refresh();
       return;
     }
-    setError("Webhook chưa unlock — thử lại");
+    setError("Đang xác nhận thanh toán…");
   }
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
-        Thanh toán VND
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--muted)]">
+        Thanh toán MoMo
       </h2>
-      {METHODS.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          onClick={() => setMethod(m.id)}
-          className={`w-full rounded-2xl border p-4 text-left ${
-            method === m.id ? "border-violet-500 bg-violet-950/40" : "border-zinc-800 bg-zinc-900"
-          }`}
-        >
-          <span className="text-white">{m.label}</span>
-        </button>
-      ))}
+      <div className="w-full rounded-2xl border border-[color:var(--accent)] bg-[color:var(--surface)] p-4 text-left">
+        <span className="text-[color:var(--foreground)]">MoMo Business</span>
+        <p className="mt-1 text-xs text-[color:var(--muted)]">Merchant / ví nền tảng · IPN tự động</p>
+      </div>
+      <p className="text-xs leading-relaxed text-[color:var(--muted)]">{PLATFORM_PAY_DISCLAIMER}</p>
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button
         type="button"
         disabled={busy}
         onClick={() => void pay()}
-        className="w-full rounded-full bg-emerald-600 py-3 font-semibold text-white disabled:opacity-40"
+        className="w-full rounded-full bg-[color:var(--accent)] py-3 font-semibold text-[#0B0B0C] disabled:opacity-40"
       >
-        {busy ? "Đang giả lập webhook…" : `Pay ${amountLabel} (mock webhook)`}
+        {busy ? "Đang xác nhận thanh toán…" : `Thanh toán MoMo · ${amountLabel}`}
       </button>
-      <p className="text-center text-[11px] text-zinc-500">
-        Unlock chỉ sau webhook OK (verify signature + amount match + idempotent).
+      <p className="text-center text-[11px] text-[color:var(--muted)]">
+        Unlock PDF/file chỉ sau webhook MoMo OK (mock đến khi có sandbox keys).
       </p>
     </div>
   );

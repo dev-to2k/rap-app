@@ -2,11 +2,12 @@ import { cookies } from "next/headers";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { getSessionSecret, sessionCookieSecure, timingSafeEqualStr } from "./security";
 
 const COOKIE = "rap_session";
 
 function secret() {
-  return process.env.SESSION_SECRET || "dev-session-secret-change-in-prod-min-32chars";
+  return getSessionSecret();
 }
 
 function sign(payload: string): string {
@@ -37,7 +38,7 @@ export function createSessionToken(user: SessionUser): string {
 export function parseSessionToken(token: string): SessionUser | null {
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;
-  if (sign(body) !== sig) return null;
+  if (!timingSafeEqualStr(sign(body), sig)) return null;
   try {
     const user = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
     if (!user?.id || !user?.email || !user?.role) return null;
@@ -47,18 +48,25 @@ export function parseSessionToken(token: string): SessionUser | null {
   }
 }
 
+function cookieBase() {
+  return {
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    path: "/",
+    secure: sessionCookieSecure(),
+  };
+}
+
 export async function setSession(user: SessionUser) {
   const token = createSessionToken(user);
   cookies().set(COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
+    ...cookieBase(),
     maxAge: 60 * 60 * 24 * 14,
   });
 }
 
 export async function clearSession() {
-  cookies().set(COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  cookies().set(COOKIE, "", { ...cookieBase(), maxAge: 0 });
 }
 
 export async function getSession(): Promise<SessionUser | null> {

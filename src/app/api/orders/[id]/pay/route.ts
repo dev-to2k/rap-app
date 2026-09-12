@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { signWebhookBody } from "@/lib/webhook";
+import { allowPaymentMocks } from "@/lib/security";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
   paymentMethod: z.enum(["momo", "vnpay", "ck"]),
-  /** Mock: if true, auto-fire signed webhook (simulator) */
-  simulateWebhook: z.boolean().optional().default(true),
+  /** Mock: if true, auto-fire signed webhook (simulator). Ignored when mocks disabled. */
+  simulateWebhook: z.boolean().optional().default(false),
 });
 
 /**
- * Mock checkout: marks intent + optionally POSTs to webhook simulator.
+ * Checkout pay intent + optional webhook simulator (dev only).
  * Unlock ONLY happens after webhook OK (amount/order match + signature).
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -38,8 +39,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     data: { paymentMethod: parsed.data.paymentMethod, paymentRef },
   });
 
+  const simulate = allowPaymentMocks() && parsed.data.simulateWebhook === true;
+
   let webhookResult = null;
-  if (parsed.data.simulateWebhook) {
+  if (simulate) {
     const payload = {
       orderId: order.id,
       amountVnd: order.amountVnd,
@@ -48,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       idempotencyKey: `wh-${order.id}-${paymentRef}`,
     };
     const { raw, signature } = signWebhookBody(payload);
-    const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const base = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
     const res = await fetch(`${base}/api/webhooks/payment`, {
       method: "POST",
       headers: {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const REASON_CODES = [
   "PAYMENT_ISSUE",
@@ -15,8 +17,11 @@ const schema = z.object({
   message: z.string().max(2000).optional(),
 });
 
-/** Stub support ticket — logs and returns ticket id */
+/** Support ticket — requires login; writes auditLog. */
 export async function POST(req: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Cần đăng nhập" }, { status: 401 });
+
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -26,7 +31,20 @@ export async function POST(req: NextRequest) {
     );
   }
   const ticketId = `SUP-${Date.now()}`;
-  console.log("[support stub]", ticketId, parsed.data);
+  const order = await prisma.order.findUnique({ where: { id: parsed.data.orderId } });
+  await prisma.auditLog.create({
+    data: {
+      beatId: order?.beatId ?? null,
+      action: "support_ticket",
+      meta: JSON.stringify({
+        ticketId,
+        orderId: parsed.data.orderId,
+        reason_code: parsed.data.reason_code,
+        userId: user.id,
+      }),
+    },
+  });
+  console.log("[support]", ticketId, parsed.data.orderId, parsed.data.reason_code, user.id);
   return NextResponse.json({
     ok: true,
     ticketId,

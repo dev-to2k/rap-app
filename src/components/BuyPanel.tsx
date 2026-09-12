@@ -33,18 +33,38 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ beatId: beat.id, sku, paymentMethod: method }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError(data.error || "Checkout failed");
-      return;
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ beatId: beat.id, sku, paymentMethod: method }),
+      });
+      const text = await res.text();
+      let data: { error?: string; order?: { id: string }; code?: string } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        setError("Checkout lỗi — thử lại");
+        return;
+      }
+      if (res.status === 401) {
+        router.push("/login?next=" + encodeURIComponent(`/beats/${beat.id}`));
+        return;
+      }
+      if (!res.ok) {
+        setError(data.error || "Checkout failed");
+        return;
+      }
+      if (!data.order?.id) {
+        setError("Không tạo được đơn");
+        return;
+      }
+      router.push(`/checkout/${data.order.id}`);
+    } catch {
+      setError("Mạng lỗi — thử lại");
+    } finally {
+      setLoading(false);
     }
-    router.push(`/checkout/${data.order.id}`);
   }
 
   if (soldExclusive) {
@@ -92,20 +112,17 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       )}
 
       <div>
-        <p className="mb-2 text-sm text-zinc-400">Thanh toán (stub)</p>
+        <p className="mb-2 text-sm text-zinc-400">Thanh toán MoMo</p>
         <div className="flex gap-2">
-          {(["momo", "vnpay", "ck"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMethod(m)}
-              className={`rounded-lg px-3 py-1.5 text-sm uppercase ${
-                method === m ? "bg-emerald-600" : "bg-zinc-800"
-              }`}
-            >
-              {m === "ck" ? "CK" : m}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => setMethod("momo")}
+            className={`rounded-lg px-3 py-1.5 text-sm uppercase ${
+              method === "momo" ? "bg-emerald-600" : "bg-zinc-800"
+            }`}
+          >
+            momo
+          </button>
         </div>
       </div>
 
@@ -114,7 +131,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       <button
         type="button"
         disabled={loading || beat.status !== "available"}
-        onClick={checkout}
+        onClick={() => void checkout()}
         className="w-full rounded-lg bg-emerald-600 py-2.5 font-medium hover:bg-emerald-500 disabled:opacity-50"
       >
         {loading ? "…" : "Thanh toán"}

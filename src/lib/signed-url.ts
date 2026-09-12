@@ -1,8 +1,9 @@
+import { getDownloadSecret } from "./security";
 import crypto from "crypto";
 import { DOWNLOAD_TTL_SECONDS } from "./config";
 
 function secret() {
-  return process.env.DOWNLOAD_HMAC_SECRET || "dev-download-hmac-secret-change-in-prod";
+  return getDownloadSecret();
 }
 
 export function createDownloadToken(opts: {

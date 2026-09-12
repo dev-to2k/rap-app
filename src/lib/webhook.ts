@@ -1,20 +1,23 @@
 import crypto from "crypto";
+import { getWebhookSecret, timingSafeEqualStr } from "./security";
 
-/** Stub webhook verification — HMAC of body with WEBHOOK_SECRET */
+/** Stub webhook verification — HMAC of body with WEBHOOK_SECRET. Fail-closed in production. */
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   if (!signature) return false;
-  const secret = process.env.WEBHOOK_SECRET || "dev-webhook-secret-change-in-prod";
+  const secret = getWebhookSecret();
+  if (!secret) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-  try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
-  } catch {
-    return false;
-  }
+  return timingSafeEqualStr(expected, signature);
 }
 
 export function signWebhookBody(body: object): { raw: string; signature: string } {
   const raw = JSON.stringify(body);
-  const secret = process.env.WEBHOOK_SECRET || "dev-webhook-secret-change-in-prod";
+  const secret = getWebhookSecret();
+  if (!secret) {
+    throw new Error("WEBHOOK_SECRET missing/default — refuse signing in production");
+  }
   const signature = crypto.createHmac("sha256", secret).update(raw).digest("hex");
   return { raw, signature };
 }
+
+export { getWebhookSecret };
