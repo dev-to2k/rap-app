@@ -40,7 +40,7 @@ export default async function HomePage() {
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Beats đang bán</h1>
-          <p className="mt-1 text-[color:var(--muted)]">Chợ beat VN — lease / WAV+stems / exclusive</p>
+          <p className="mt-1 max-w-xl text-sm text-[color:var(--muted)]">MP3 nghe thử / WAV làm bài / Exclusive giữ một mình — giá VND, license rõ.</p>
         </div>
         <Link
           href="/upload"
@@ -52,7 +52,7 @@ export default async function HomePage() {
 
       {beats.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-700 bg-[color:var(--surface)] p-12 text-center text-[color:var(--muted)]">
-          Chưa có beat nào. Đăng cái đầu để mở bán.
+          Đừng inbox hỏi beat nữa — chọn gói, trả MoMo, nhận PDF + file.
         </div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">

@@ -106,9 +106,7 @@ export default function CheckoutPage() {
         {order?.amountVnd ? <p className="mt-2 text-lg">{formatVnd(order.amountVnd)}</p> : null}
         <p className="mt-4 text-sm">{msg}</p>
         <p className="mt-4 text-xs leading-relaxed text-zinc-400">
-          Thanh toán vào <strong className="text-zinc-200">ví nền tảng</strong> Rap App (MoMo gắn merchant). Đây không
-          phải chuyển trực tiếp cho producer. Sau khi thanh toán thành công, bạn nhận license PDF + file theo đúng gói
-          đã mua. Phí nền tảng (15%, seed 12%) đã gồm trong giá — producer nhận phần còn lại theo chính sách payout.
+          Trả ví nền tảng → PDF + file. Không CK riêng producer.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <button

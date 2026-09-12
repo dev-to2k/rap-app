@@ -29,7 +29,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   async function checkout() {
     setError("");
     if (sku === "exclusive" && beat.sampleFlag === "uncleared") {
-      setError("Không bán Exclusive khi sample chưa clear");
+      setError("Có sample chưa clear → chỉ lease; không bán Exclusive.");
       return;
     }
     setLoading(true);
@@ -70,7 +70,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   if (soldExclusive) {
     return (
       <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-zinc-400">
-        Beat đã bán Exclusive — lease/WAV đã ẩn.
+        Beat đã bán Exclusive — gỡ bán · không ai mua exclusive lần 2 trên Rap App.
       </div>
     );
   }
@@ -78,6 +78,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   return (
     <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
       <h3 className="font-semibold">Chọn SKU</h3>
+      <p className="text-xs text-zinc-400">MP3 nghe thử / WAV làm bài / Exclusive giữ một mình — giá VND, license rõ.</p>
       {(
         [
           ["lease", beat.priceLease],
@@ -107,8 +108,11 @@ export function BuyPanel({ beat }: { beat: Beat }) {
           </label>
         );
       })}
+      {sku === "exclusive" && beat.sampleFlag !== "uncleared" && (
+        <p className="text-xs text-zinc-400">Trả xong → beat gỡ bán · không ai mua exclusive lần 2 trên Rap App.</p>
+      )}
       {beat.sampleFlag === "uncleared" && (
-        <p className="text-sm text-amber-300">Không bán Exclusive khi sample chưa clear</p>
+        <p className="text-sm text-amber-300">Có sample chưa clear → chỉ lease; không bán Exclusive.</p>
       )}
 
       <div>
@@ -134,7 +138,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         onClick={() => void checkout()}
         className="w-full rounded-lg bg-emerald-600 py-2.5 font-medium hover:bg-emerald-500 disabled:opacity-50"
       >
-        {loading ? "…" : "Thanh toán"}
+        {loading ? "…" : "Thanh toán MoMo"}
       </button>
     </div>
   );

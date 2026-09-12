@@ -26,7 +26,7 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
           {beat.producer.name} · {beat.bpm} BPM · {beat.musicalKey} · sample: {beat.sampleFlag}
         </p>
         <p className="mt-4 text-sm text-zinc-500">
-          Lease {formatVnd(beat.priceLease)} · WAV {formatVnd(beat.priceWav)} · Exclusive{" "}
+          MP3 / WAV / Exclusive — Lease {formatVnd(beat.priceLease)} · WAV {formatVnd(beat.priceWav)} · Exclusive{" "}
           {formatVnd(beat.priceExclusive)}
         </p>
         {beat.audioUrl && (

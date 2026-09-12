@@ -34,7 +34,8 @@ export default function UploadPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-2xl font-bold">Đăng beat</h1>
+      <h1 className="mb-2 text-2xl font-bold">Đăng beat</h1>
+      <p className="mb-6 text-sm text-zinc-400">Up beat · set 3 giá VND · tự khai sample · bán có PDF.</p>
       <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
         <label className="block text-sm">
           Tiêu đề

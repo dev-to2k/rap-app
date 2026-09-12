@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const PLATFORM_PAY_DISCLAIMER =
-  "Thanh toán vào ví nền tảng Rap App (MoMo gắn merchant). Đây không phải chuyển trực tiếp cho producer. Sau khi thanh toán thành công, bạn nhận license PDF + file theo đúng gói đã mua. Phí nền tảng (15%, seed 12%) đã gồm trong giá — producer nhận phần còn lại theo chính sách payout.";
+  "Trả ví nền tảng → PDF + file. Không CK riêng producer.";
 
 export function CheckoutPay({
   orderId,
