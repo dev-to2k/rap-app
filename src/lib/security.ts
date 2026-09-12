@@ -10,9 +10,9 @@ export function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
 }
 
-/** Mocks only when NODE_ENV!==production AND ALLOW_PAYMENT_MOCKS==="true". */
+/** Mocks only outside production deploy AND ALLOW_PAYMENT_MOCKS==="true". */
 export function allowPaymentMocks(): boolean {
-  if (process.env.NODE_ENV === "production") return false;
+  if (isProductionRuntime()) return false;
   return process.env.ALLOW_PAYMENT_MOCKS === "true";
 }
 
