@@ -1,12 +1,12 @@
-// Rap App — Prisma schema (SQLite for local demo)
-// Prod: swap to Postgres/Neon by changing provider + DATABASE_URL
+// Rap App — Prisma schema (PostgreSQL / Neon free for Vercel + local)
+// Set DATABASE_URL=postgresql://...?sslmode=require
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
