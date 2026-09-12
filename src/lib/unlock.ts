@@ -30,7 +30,7 @@ export async function unlockOrder(orderId: string) {
       // Atomic: only succeed if reserved (checkout) or still available
       const updated = await tx.beat.updateMany({
         where: { id: order.beatId, status: { in: ["available", "reserved"] }, sampleFlag: "clean" },
-        data: { status: "sold_exclusive" },
+        data: { status: "sold_exclusive", reservedAt: null },
       });
       if (updated.count !== 1) {
         const beat = await tx.beat.findUnique({ where: { id: order.beatId } });

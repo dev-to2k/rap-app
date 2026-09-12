@@ -13,7 +13,7 @@ export class OrderError extends Error {
 export async function releaseExclusiveReserve(beatId: string) {
   await prisma.beat.updateMany({
     where: { id: beatId, status: "reserved" },
-    data: { status: "available" },
+    data: { status: "available", reservedAt: null },
   });
 }
 
@@ -36,7 +36,7 @@ export async function createMarketplaceOrder(input: {
     if (input.sku === "exclusive") {
       const reserved = await tx.beat.updateMany({
         where: { id: beat.id, status: "available" },
-        data: { status: "reserved" },
+        data: { status: "reserved", reservedAt: new Date() },
       });
       if (reserved.count !== 1) {
         throw new OrderError("EXCLUSIVE_CONFLICT", "EXCLUSIVE_CONFLICT");

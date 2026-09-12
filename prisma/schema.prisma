@@ -37,6 +37,7 @@ model Beat {
   priceWav       Int
   priceExclusive Int
   status         String     @default("available") // available | reserved | sold_exclusive | delisted
+  reservedAt     DateTime?  // soft-reserve timestamp; cleared on sold/release; TTL ~15m
   producerId     String
   producer       User       @relation(fields: [producerId], references: [id])
   createdAt      DateTime   @default(now())

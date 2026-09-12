@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createMarketplaceOrder, OrderError } from "@/lib/orders";
+import { releaseExpiredExclusiveReserves } from "@/lib/reserves";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,13 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const user = await requireUser(["buyer", "producer"]);
   if (!user) return NextResponse.json({ error: "Cần đăng nhập" }, { status: 401 });
+
+  // Soft-reserve TTL: free expired exclusive holds before new checkout
+  try {
+    await releaseExpiredExclusiveReserves(15);
+  } catch (e) {
+    console.error("releaseExpiredExclusiveReserves", e);
+  }
 
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
