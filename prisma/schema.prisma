@@ -1,0 +1,107 @@
+// Rap App — Prisma schema (SQLite for local demo)
+// Prod: swap to Postgres/Neon by changing provider + DATABASE_URL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  password  String
+  role      String     // buyer | producer
+  createdAt DateTime   @default(now())
+  beats     Beat[]
+  orders    Order[]
+  licenses  License[]
+}
+
+model Beat {
+  id             String     @id @default(cuid())
+  title          String
+  coverUrl       String?
+  audioUrl       String
+  wavUrl         String?
+  stemsUrl       String?
+  bpm            Int
+  musicalKey     String
+  sampleFlag     String     // clean | uncleared
+  priceLease     Int        // VND
+  priceWav       Int
+  priceExclusive Int
+  status         String     @default("available") // available | sold_exclusive | delisted
+  producerId     String
+  producer       User       @relation(fields: [producerId], references: [id])
+  createdAt      DateTime   @default(now())
+  orders         Order[]
+  auditLogs      AuditLog[]
+}
+
+model Order {
+  id                    String    @id @default(cuid())
+  buyerId               String
+  buyer                 User      @relation(fields: [buyerId], references: [id])
+  beatId                String
+  beat                  Beat      @relation(fields: [beatId], references: [id])
+  sku                   String    // lease | wav | exclusive
+  amountVnd             Int
+  takeRateBps           Int
+  status                String    @default("pending") // pending | paid | unlocked | failed
+  paymentMethod         String?   // momo | vnpay | ck
+  paymentRef            String?
+  webhookIdempotencyKey String?   @unique
+  createdAt             DateTime  @default(now())
+  paidAt                DateTime?
+  license               License?
+}
+
+model License {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  buyerId       String
+  buyer         User     @relation(fields: [buyerId], references: [id])
+  beatId        String
+  sku           String
+  pdfPath       String?
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  beatId    String?
+  beat      Beat?    @relation(fields: [beatId], references: [id])
+  action    String
+  meta      String?
+  createdAt DateTime @default(now())
+}
+
+model PlatformConfig {
+  id                 String    @id @default("default")
+  takeRateBps        Int       @default(1500)
+  promoTakeRateBps   Int?
+  promoEndsAt        DateTime?
+}
+
+model WaitlistSignup {
+  id          String   @id @default(cuid())
+  email       String
+  handle      String?
+  role        String
+  catalogUrl  String?
+  src         String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+}
