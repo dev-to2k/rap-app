@@ -4,12 +4,21 @@ import { isProductionRuntime } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
+/** Any Vercel deploy (preview/production) or NODE_ENV=production → require CRON_SECRET. */
+function isDeployedRuntime(): boolean {
+  if (isProductionRuntime()) return true;
+  const vercelEnv = process.env.VERCEL_ENV?.trim();
+  if (vercelEnv === "preview" || vercelEnv === "development") return true;
+  if (process.env.VERCEL === "1") return true;
+  return false;
+}
+
 function authorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET?.trim();
-  // Fail-closed in production/deploy: missing CRON_SECRET → reject
   if (!secret) {
-    if (isProductionRuntime()) return false;
-    return true; // local/dev only
+    // Fail-closed on every Vercel/deployed env; local only stays open
+    if (isDeployedRuntime()) return false;
+    return true;
   }
   const auth = req.headers.get("authorization") || "";
   return auth === `Bearer ${secret}`;
