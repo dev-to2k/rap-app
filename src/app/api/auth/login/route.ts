@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { setSession, verifyPassword } from "@/lib/auth";
-import { clientIp, rateLimit } from "@/lib/security";
+import { clientIp, durableRateLimit } from "@/lib/security";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +19,19 @@ export async function POST(req: NextRequest) {
   }
 
   const ip = clientIp(req.headers);
-  const email = parsed.data.email.toLowerCase();
-  if (!rateLimit(`login:${ip}:${email}`, 10, 60_000)) {
-    return NextResponse.json({ error: "Too many login attempts" }, { status: 429, headers: { "Retry-After": "60" } });
+  const email = parsed.data.email.toLowerCase().trim();
+
+  // Durable (Neon) — in-memory Map fails on Vercel serverless isolates
+  const ipOk = await durableRateLimit(`login:ip:${ip}`, 30, 60_000);
+  const pairOk = await durableRateLimit(`login:ipemail:${ip}:${email}`, 5, 60_000);
+  if (!ipOk || !pairOk) {
+    return NextResponse.json(
+      { error: "Too many login attempts" },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
   }
 
-  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await verifyPassword(parsed.data.password, user.password))) {
     return NextResponse.json({ error: "Sai email hoặc mật khẩu" }, { status: 401 });
   }

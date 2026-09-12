@@ -84,6 +84,14 @@ model AuditLog {
   createdAt DateTime @default(now())
 }
 
+/// Durable rate-limit buckets (Vercel serverless — in-memory Map does not share)
+model RateLimitBucket {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime
+  updatedAt   DateTime @updatedAt
+}
+
 model PlatformConfig {
   id                 String    @id @default("default")
   takeRateBps        Int       @default(1500)

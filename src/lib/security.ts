@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { prisma } from "./prisma";
 
 const DEFAULT_SESSION = "dev-session-secret-change-in-prod-min-32chars";
 const DEFAULT_WEBHOOK = "dev-webhook-secret-change-in-prod";
@@ -101,4 +102,29 @@ export function sessionCookieSecure(): boolean {
   if (isProductionRuntime()) return true;
   const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
   return appUrl.startsWith("https://");
+}
+
+
+/** DB-backed rate limit for serverless (Neon). Returns false when over limit. */
+export async function durableRateLimit(
+  key: string,
+  limit = 5,
+  windowMs = 60_000,
+): Promise<boolean> {
+  const now = new Date();
+  const existing = await prisma.rateLimitBucket.findUnique({ where: { key } });
+  if (!existing || now.getTime() - existing.windowStart.getTime() > windowMs) {
+    await prisma.rateLimitBucket.upsert({
+      where: { key },
+      create: { key, count: 1, windowStart: now },
+      update: { count: 1, windowStart: now },
+    });
+    return true;
+  }
+  if (existing.count >= limit) return false;
+  await prisma.rateLimitBucket.update({
+    where: { key },
+    data: { count: { increment: 1 } },
+  });
+  return true;
 }
