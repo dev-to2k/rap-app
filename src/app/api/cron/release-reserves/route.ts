@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { releaseExpiredExclusiveReserves } from "@/lib/reserves";
+import { isProductionRuntime } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
 function authorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return true; // allow when unset (dev); set CRON_SECRET on Vercel
+  // Fail-closed in production/deploy: missing CRON_SECRET → reject
+  if (!secret) {
+    if (isProductionRuntime()) return false;
+    return true; // local/dev only
+  }
   const auth = req.headers.get("authorization") || "";
   return auth === `Bearer ${secret}`;
 }
