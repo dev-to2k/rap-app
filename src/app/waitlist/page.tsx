@@ -47,7 +47,7 @@ function WaitlistForm() {
     return (
       <div className="mx-auto max-w-md space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
         <h1 className="text-xl font-bold text-white">Đã nhận early access</h1>
-        <p className="text-sm text-zinc-300">Cam on ban  minh se lien he qua email khi mo them slot.</p>
+        <p className="text-sm text-zinc-300">Cảm ơn bạn — mình sẽ liên hệ qua email khi mở thêm slot.</p>
         <Link href="/" className="inline-block text-sm text-emerald-400 hover:underline">
           ← Về chợ beat
         </Link>
@@ -60,7 +60,7 @@ function WaitlistForm() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-white">Xin early access</h1>
         <p className="text-sm text-zinc-400">
-          Cho beat VN-first  lease / WAV+stems / exclusive, checkout VND. Khong can thanh toan de vao waitlist.
+          Chợ beat VN-first  lease / WAV+stems / exclusive, checkout VND. Không cần thanh toán để vào waitlist.
         </p>
       </div>
       <form onSubmit={onSubmit} className="space-y-4">
