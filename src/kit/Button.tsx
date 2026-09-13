@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
-import { cn } from "./cn";
+import { cn, radius } from "./cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -27,7 +27,8 @@ export function buttonClass({
   className?: string;
 } = {}) {
   return cn(
-    "inline-flex items-center justify-center rounded-full font-semibold transition disabled:opacity-40 disabled:pointer-events-none",
+    "inline-flex items-center justify-center gap-2 font-semibold transition disabled:opacity-40 disabled:pointer-events-none",
+    radius,
     variantClass[variant],
     sizeClass[size],
     className,

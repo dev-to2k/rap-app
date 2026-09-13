@@ -1,4 +1,5 @@
 import { IconButton } from "./IconButton";
+import { Icon } from "./Icon";
 import { cn } from "./cn";
 
 export function PlayButton({
@@ -17,14 +18,13 @@ export function PlayButton({
   return (
     <IconButton
       onClick={onClick}
-      aria-label={label || (playing ? "Tạm dừng" : "Phát")}
+      aria-label={label || (playing ? "Pause" : "Play")}
       className={cn(
-        "text-lg",
         overlay ? "absolute inset-0 h-full w-full rounded-[inherit]" : className ? undefined : "h-10 w-10",
         className,
       )}
     >
-      {playing ? "❚❚" : "▶"}
+      <Icon name={playing ? "pause" : "play"} size={overlay ? "md" : "sm"} className={playing ? undefined : "translate-x-px"} />
     </IconButton>
   );
 }

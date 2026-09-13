@@ -3,9 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Alert, Button, Chip, Field, Input, PageHeader, Spinner } from "@/kit";
+import { Alert, Button, Chip, Field, Icon, Input, PageHeader, Spinner } from "@/kit";
+import { useT } from "@/i18n/I18nProvider";
 
 function WaitlistForm() {
+  const t = useT();
   const sp = useSearchParams();
   const [email, setEmail] = useState("");
   const [handle, setHandle] = useState("");
@@ -38,7 +40,7 @@ function WaitlistForm() {
     setLoading(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Không lưu được");
+      setError(data.error || t("waitlist.saveError"));
       return;
     }
     setDone(true);
@@ -48,43 +50,38 @@ function WaitlistForm() {
     return (
       <div className="mx-auto max-w-md space-y-4 text-center">
         <Alert variant="success">
-          <p className="text-base font-bold text-foreground">Đã nhận early access</p>
-          <p className="mt-1 text-sm text-muted">Cảm ơn bạn — mình sẽ liên hệ qua email khi mở thêm slot.</p>
+          <p className="text-base font-bold text-foreground">{t("waitlist.doneTitle")}</p>
+          <p className="mt-1 text-sm text-muted">{t("waitlist.doneBody")}</p>
         </Alert>
         <Link href="/" className="inline-block text-sm text-accent hover:underline">
-          ← Về chợ beat
+          {t("waitlist.backHome")}
         </Link>
-        <p className="pt-4 text-left text-[11px] leading-relaxed text-muted">
-          Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
-        </p>
+        <p className="pt-4 text-left text-[11px] leading-relaxed text-muted">{t("waitlist.privacy")}</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <PageHeader
-        title="Xin early access"
-        description="Chợ beat VN-first — lease / WAV+stems / exclusive, checkout VND. Không cần thanh toán để vào waitlist."
-      />
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8">
+      <PageHeader title={t("waitlist.title")} description={t("waitlist.description")} icon="flame" />
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Email *">
+        <Field label={t("waitlist.email")}>
           <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
-        <Field label="IG / handle">
+        <Field label={t("waitlist.handle")}>
           <Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@yourhandle" />
         </Field>
         <fieldset className="space-y-2 text-sm">
-          <legend className="text-muted">Bạn là</legend>
+          <legend className="text-xs font-medium uppercase tracking-wider text-muted">{t("waitlist.youAre")}</legend>
           <div className="flex gap-3">
             {(["producer", "rapper"] as const).map((r) => (
               <Chip key={r} selected={role === r} className="flex-1" onClick={() => setRole(r)}>
-                {r}
+                {t(`waitlist.${r}`)}
               </Chip>
             ))}
           </div>
         </fieldset>
-        <Field label="Catalog URL (tuỳ chọn)">
+        <Field label={t("waitlist.catalog")}>
           <Input
             type="url"
             value={catalogUrl}
@@ -96,24 +93,26 @@ function WaitlistForm() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <Spinner /> Đang gửi…
+              <Spinner /> {t("waitlist.sending")}
             </span>
           ) : (
-            "Xin early access"
+            <>
+              <Icon name="sparkles" size="sm" />
+              {t("waitlist.submit")}
+            </>
           )}
         </Button>
       </form>
 
-      <p className="text-[11px] leading-relaxed text-muted">
-        Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
-      </p>
+      <p className="text-[11px] leading-relaxed text-muted">{t("waitlist.privacy")}</p>
     </div>
   );
 }
 
 export default function WaitlistPage() {
+  const t = useT();
   return (
-    <Suspense fallback={<p className="text-muted">Đang tải…</p>}>
+    <Suspense fallback={<p className="text-muted">{t("common.loading")}</p>}>
       <WaitlistForm />
     </Suspense>
   );

@@ -1,11 +1,12 @@
-import Link from "next/link";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
-import { Alert, buttonClass, EmptyState, PageHeader } from "@/kit";
-import { BeatCard } from "@/components/BeatCard";
+import { Alert, Container } from "@/kit";
+import { MarketplaceHome } from "@/components/MarketplaceHome";
+import { getT } from "@/i18n/get-locale";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: { q?: string } }) {
+  const t = getT();
   let beats: Array<{
     id: string;
     title: string;
@@ -34,44 +35,12 @@ export default async function HomePage() {
 
   return (
     <div>
-      {dbUnavailable ? (
-        <Alert variant="warning" className="mb-6">
-          Database chưa sẵn sàng trên deploy này (thiếu <code>DATABASE_URL</code>). Demo local/tunnel vẫn dùng được; Vercel cần Neon + redeploy.
-        </Alert>
+      {dbUnavailable && process.env.NODE_ENV === "development" ? (
+        <Container className="pt-6">
+          <Alert variant="warning">{t("home.dbUnavailable")}</Alert>
+        </Container>
       ) : null}
-      <PageHeader
-        title="Beats đang bán"
-        description="MP3 nghe thử / WAV làm bài / Exclusive giữ một mình — giá VND, license rõ."
-        action={
-          <Link href="/upload" className={buttonClass({ size: "sm" })}>
-            Đăng beat
-          </Link>
-        }
-      />
-
-      {beats.length === 0 ? (
-        <EmptyState
-          title="Chưa có beat nào"
-          description="Đừng inbox hỏi beat nữa — chọn gói, trả MoMo, nhận PDF + file."
-        />
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {beats.map((b) => (
-            <BeatCard
-              key={b.id}
-              id={b.id}
-              title={b.title}
-              coverUrl={b.coverUrl}
-              producer={b.producer.name}
-              bpm={b.bpm}
-              musicalKey={b.musicalKey}
-              price={b.priceLease}
-              audioUrl={b.audioUrl}
-              sampleFlag={b.sampleFlag}
-            />
-          ))}
-        </ul>
-      )}
+      <MarketplaceHome beats={beats} initialQuery={searchParams.q || ""} />
     </div>
   );
 }

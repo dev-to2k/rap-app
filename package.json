@@ -16,13 +16,14 @@
   "dependencies": {
     "@prisma/client": "5.22.0",
     "bcryptjs": "^3.0.3",
+    "lucide-react": "^1.45.0",
     "next": "14.2.35",
     "pdf-lib": "^1.17.1",
+    "prisma": "5.22.0",
     "react": "^18",
     "react-dom": "^18",
     "uuid": "^14.0.2",
-    "zod": "3.23.8",
-    "prisma": "5.22.0"
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",

@@ -1,14 +1,13 @@
-import { PageHeader } from "@/kit";
+import { Container, PageHeader } from "@/kit";
 import { UploadForm } from "@/components/UploadForm";
+import { getT } from "@/i18n/get-locale";
 
 export default function UploadPage() {
+  const t = getT();
   return (
-    <div>
-      <PageHeader
-        title="Đăng beat"
-        description="Up beat · set 3 giá VND · tự khai sample · bán có PDF."
-      />
+    <Container className="py-8">
+      <PageHeader title={t("upload.title")} description={t("upload.description")} icon="upload" />
       <UploadForm />
-    </div>
+    </Container>
   );
 }

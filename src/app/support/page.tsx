@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Card, Field, Input, PageHeader, Select, Textarea } from "@/kit";
+import { Alert, Button, Card, Field, Icon, Input, PageHeader, Select, Textarea } from "@/kit";
+import { useT } from "@/i18n/I18nProvider";
 
-const REASONS = [
+const REASON_VALUES = [
   "PAYMENT_ISSUE",
   "DOWNLOAD_FAILED",
   "EXCLUSIVE_CONFLICT",
@@ -12,8 +13,9 @@ const REASONS = [
 ] as const;
 
 export default function SupportPage() {
+  const t = useT();
   const [orderId, setOrderId] = useState("");
-  const [reason, setReason] = useState<(typeof REASONS)[number]>("PAYMENT_ISSUE");
+  const [reason, setReason] = useState<(typeof REASON_VALUES)[number]>("PAYMENT_ISSUE");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState("");
   const [ok, setOk] = useState(false);
@@ -27,34 +29,52 @@ export default function SupportPage() {
     });
     const data = await res.json();
     setOk(res.ok);
-    setResult(res.ok ? `Ticket ${data.ticketId}: ${data.message}` : data.error || "Error");
+    setResult(
+      res.ok ? t("support.ticket", { id: data.ticketId, message: data.message }) : data.error || "Error",
+    );
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <PageHeader title="Support" description="Gửi ticket theo ORDER_ID — thanh toán, tải file, Exclusive, SKU." />
+    <div className="mx-auto max-w-lg px-4 py-8">
+      <PageHeader title={t("support.title")} description={t("support.description")} icon="support" />
       <form onSubmit={submit}>
         <Card className="space-y-4 p-6">
-          <Field label="ORDER_ID">
-            <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} required />
+          <Field label={t("support.orderId")} hint="ORDER_ID">
+            <Input
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              placeholder={t("support.orderPlaceholder")}
+              required
+            />
           </Field>
-          <Field label="Lý do">
+          <Field label={t("support.reason")}>
             <Select
+              name="reason_code"
               value={reason}
-              onChange={(e) => setReason(e.target.value as (typeof REASONS)[number])}
+              required
+              placeholder={t("common.selectPlaceholder")}
+              onChange={(e) => setReason(e.target.value as (typeof REASON_VALUES)[number])}
             >
-              {REASONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
+              {REASON_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`support.reasons.${value}`)}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Nội dung">
-            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} />
+          <Field label={t("support.message")}>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={4}
+              placeholder={t("support.messagePlaceholder")}
+            />
           </Field>
           <Button type="submit" className="w-full">
-            Gửi ticket
+            <>
+              <Icon name="ticket" size="sm" />
+              {t("support.submit")}
+            </>
           </Button>
           {result ? <Alert variant={ok ? "success" : "danger"}>{result}</Alert> : null}
         </Card>

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
 import { AudioPlaybackProvider } from "@/components/AudioPlaybackProvider";
-import { Container } from "@/kit";
+import { AppShell } from "@/components/AppShell";
+import { getLocale, getT } from "@/i18n/get-locale";
+import { dictionaries } from "@/i18n/messages";
+import { I18nProvider } from "@/i18n/I18nProvider";
+import { getSession } from "@/lib/auth";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,21 +19,25 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Rap App — Beat Marketplace VN",
-  description: "Chợ beat Việt Nam: Lease MP3, WAV+stems, Exclusive",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT();
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = getLocale();
+  const user = await getSession();
   return (
-    <html lang="vi">
+    <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
-        <AudioPlaybackProvider>
-          <Nav />
-          <main>
-            <Container className="py-8">{children}</Container>
-          </main>
-        </AudioPlaybackProvider>
+        <I18nProvider locale={locale} messages={dictionaries[locale]}>
+          <AudioPlaybackProvider>
+            <AppShell user={user ? { name: user.name, role: user.role } : null}>{children}</AppShell>
+          </AudioPlaybackProvider>
+        </I18nProvider>
       </body>
     </html>
   );

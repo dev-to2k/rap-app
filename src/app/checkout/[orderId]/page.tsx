@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Alert, Button, Card, PageHeader, Price, Spinner } from "@/kit";
+import { useT } from "@/i18n/I18nProvider";
 
 type Order = {
   id: string;
@@ -14,6 +15,7 @@ type Order = {
 };
 
 export default function CheckoutPage() {
+  const t = useT();
   const params = useParams();
   const router = useRouter();
   const orderId = useMemo(() => {
@@ -22,9 +24,13 @@ export default function CheckoutPage() {
   }, [params]);
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [msg, setMsg] = useState("Chọn Thanh toán MoMo để tiếp tục");
+  const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setMsg(t("checkout.chooseMomo"));
+  }, [t]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -41,26 +47,26 @@ export default function CheckoutPage() {
         }
         if (res.ok && data.order) {
           setOrder(data.order);
-          if (data.order.status === "unlocked") setMsg("Thanh toán OK");
+          if (data.order.status === "unlocked") setMsg(t("checkout.paid"));
           else if (data.order.status === "failed") {
-            setMsg("Chưa thanh toán — file chưa mở.");
+            setMsg(t("checkout.unpaid"));
             setFailed(true);
-          } else setMsg("Đang chờ thanh toán…");
+          } else setMsg(t("checkout.waiting"));
         }
       } catch {
-        if (!cancelled) setMsg("Không tải được đơn — thử lại");
+        if (!cancelled) setMsg(t("checkout.loadError"));
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [orderId, router]);
+  }, [orderId, router, t]);
 
   async function mockPay(fail = false) {
     if (!orderId) return;
     setBusy(true);
     setFailed(false);
-    setMsg("Đang xác nhận thanh toán…");
+    setMsg(t("checkout.confirming"));
     try {
       const res = await fetch("/api/pay/mock", {
         method: "POST",
@@ -76,7 +82,7 @@ export default function CheckoutPage() {
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        setMsg("Lỗi thanh toán — thử lại");
+        setMsg(t("checkout.payError"));
         return;
       }
       if (res.status === 401) {
@@ -84,20 +90,20 @@ export default function CheckoutPage() {
         return;
       }
       if (res.status === 404) {
-        setMsg(data.error || "Mock pay tắt trên môi trường này");
+        setMsg(data.error || t("checkout.mockOff"));
         return;
       }
       if (!res.ok || data.paid === false || data.order?.status === "failed") {
-        setMsg(data.error || "Chưa thanh toán — file chưa mở.");
+        setMsg(data.error || t("checkout.unpaid"));
         setFailed(true);
         if (data.order) setOrder(data.order);
         return;
       }
-      setMsg("Thanh toán OK");
+      setMsg(t("checkout.paid"));
       if (data.order) setOrder(data.order);
       router.push(`/orders/${orderId}/success`);
     } catch {
-      setMsg("Mạng lỗi — thử lại");
+      setMsg(t("common.networkError"));
     } finally {
       setBusy(false);
     }
@@ -105,23 +111,23 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-4">
-      <PageHeader title="Checkout" description="Trả ví nền tảng → PDF + file. Không CK riêng producer." />
+      <PageHeader title={t("checkout.title")} description={t("checkout.description")} icon="wallet" />
       <Card className="space-y-4 p-6">
-        <p className="font-mono text-xs text-muted">Đơn: {orderId}</p>
+        <p className="font-mono text-xs text-muted">{t("checkout.order", { id: orderId })}</p>
         {order?.amountVnd ? <Price amount={order.amountVnd} className="text-2xl" /> : null}
         {failed ? <Alert variant="danger">{msg}</Alert> : <p className="text-sm text-muted">{msg}</p>}
         <div className="flex flex-col gap-2">
           <Button disabled={busy || !orderId} onClick={() => void mockPay(false)}>
             {busy ? (
               <span className="inline-flex items-center gap-2">
-                <Spinner /> Đang xác nhận…
+                <Spinner /> {t("checkout.confirming")}
               </span>
             ) : (
-              "Thanh toán MoMo"
+              t("checkout.payMomo")
             )}
           </Button>
           <Button variant="secondary" disabled={busy || !orderId} onClick={() => void mockPay(true)}>
-            Mock fail
+            {t("checkout.mockFail")}
           </Button>
         </div>
       </Card>

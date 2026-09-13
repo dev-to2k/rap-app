@@ -1,13 +1,9 @@
-import { SKU_LABELS } from "@/lib/config";
+"use client";
+
 import { cn, Price } from "@/kit";
+import { useT } from "@/i18n/I18nProvider";
 
 const SKUS = ["lease", "wav", "exclusive"] as const;
-
-const HINTS: Record<(typeof SKUS)[number], string> = {
-  lease: "MP3 · non-exclusive",
-  wav: "WAV + stems · non-exclusive",
-  exclusive: "Bán độc quyền · beat gỡ khỏi chợ",
-};
 
 export function SkuSelector({
   sku,
@@ -22,7 +18,13 @@ export function SkuSelector({
   sampleFlag: string;
   status: string;
 }) {
+  const t = useT();
   const exclusiveDisabled = sampleFlag === "uncleared" || status !== "available";
+  const hints = {
+    lease: t("buy.hintLease"),
+    wav: t("buy.hintWav"),
+    exclusive: t("buy.hintExclusive"),
+  };
 
   return (
     <div className="space-y-2">
@@ -41,13 +43,13 @@ export function SkuSelector({
             )}
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="font-medium text-foreground">{SKU_LABELS[s]}</span>
+              <span className="font-medium text-foreground">{t(`sku.${s}`)}</span>
               <Price amount={prices[s]} className={s === "exclusive" ? "text-exclusive" : undefined} />
             </div>
             {s === "exclusive" && sampleFlag === "uncleared" ? (
-              <p className="mt-1 text-xs text-warning">Không bán Exclusive — sample uncleared</p>
+              <p className="mt-1 text-xs text-warning">{t("buy.exclusiveUncleared")}</p>
             ) : (
-              <p className="mt-1 text-xs text-muted">{HINTS[s]}</p>
+              <p className="mt-1 text-xs text-muted">{hints[s]}</p>
             )}
           </button>
         );

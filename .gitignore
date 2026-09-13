@@ -37,6 +37,8 @@ next-env.d.ts
 # sqlite / local data
 *.db
 *.db-journal
+.pgdata/
+.pglite/
 /storage/audio/
 /storage/licenses/
 /storage/uploads/

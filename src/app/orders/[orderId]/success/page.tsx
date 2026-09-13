@@ -3,12 +3,13 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createDownloadToken } from "@/lib/signed-url";
-import { SKU_LABELS } from "@/lib/config";
 import { Alert, buttonClass, Card, PageHeader, Price } from "@/kit";
+import { getT } from "@/i18n/get-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuccessPage({ params }: { params: { orderId: string } }) {
+  const t = getT();
   const user = await getSession();
   if (!user) redirect("/login");
 
@@ -21,9 +22,9 @@ export default async function SuccessPage({ params }: { params: { orderId: strin
   if (order.status !== "unlocked" || !order.license) {
     return (
       <Alert variant="warning" className="text-center">
-        <p className="text-lg text-foreground">Chưa thanh toán — file chưa mở.</p>
+        <p className="text-lg text-foreground">{t("success.unpaid")}</p>
         <Link href={`/checkout/${order.id}`} className="mt-4 inline-block text-accent underline">
-          Quay lại checkout
+          {t("success.backCheckout")}
         </Link>
       </Alert>
     );
@@ -44,19 +45,19 @@ export default async function SuccessPage({ params }: { params: { orderId: strin
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
-      <PageHeader title="Thanh toán OK" />
+      <PageHeader title={t("success.paid")} icon="sparkles" />
       <p className="text-muted">
-        {order.beat.title} · {SKU_LABELS[order.sku]} · <Price amount={order.amountVnd} className="text-base" />
+        {order.beat.title} · {t(`sku.${order.sku}`)} · <Price amount={order.amountVnd} className="text-base" />
       </p>
       <Card className="space-y-2 p-4">
         {downloads.map((d) => (
           <a key={d.fileKind} href={d.url} className={buttonClass({ className: "w-full" })}>
-            Tải {d.fileKind.toUpperCase()}
+            {t("success.download", { kind: d.fileKind.toUpperCase() })}
           </a>
         ))}
       </Card>
       <Link href="/library" className={buttonClass({ variant: "ghost", size: "sm" })}>
-        Vào Library
+        {t("success.toLibrary")}
       </Link>
     </div>
   );

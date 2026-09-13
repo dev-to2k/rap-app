@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BuyPanel } from "@/components/BuyPanel";
 import { BeatPlayer } from "@/components/BeatPlayer";
-import { Badge } from "@/kit";
+import { Badge, Container } from "@/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +14,15 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
   if (!beat) notFound();
 
   return (
-    <div className="grid gap-8 pb-24 md:grid-cols-2 md:pb-8">
+    <Container className="grid gap-8 py-8 md:grid-cols-2">
       <div>
-        <BeatPlayer id={beat.id} coverUrl={beat.coverUrl} audioUrl={beat.audioUrl} />
+        <BeatPlayer
+          id={beat.id}
+          title={beat.title}
+          producer={beat.producer.name}
+          coverUrl={beat.coverUrl}
+          audioUrl={beat.audioUrl}
+        />
         <h1 className="text-3xl font-bold tracking-tight">{beat.title}</h1>
         <p className="mt-2 text-muted">
           {beat.producer.name} · {beat.bpm} BPM · {beat.musicalKey}
@@ -29,16 +35,18 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
           )}
         </p>
       </div>
-      <BuyPanel
-        beat={{
-          id: beat.id,
-          priceLease: beat.priceLease,
-          priceWav: beat.priceWav,
-          priceExclusive: beat.priceExclusive,
-          sampleFlag: beat.sampleFlag,
-          status: beat.status,
-        }}
-      />
-    </div>
+      <div className="md:sticky md:top-20 md:self-start">
+        <BuyPanel
+          beat={{
+            id: beat.id,
+            priceLease: beat.priceLease,
+            priceWav: beat.priceWav,
+            priceExclusive: beat.priceExclusive,
+            sampleFlag: beat.sampleFlag,
+            status: beat.status,
+          }}
+        />
+      </div>
+    </Container>
   );
 }

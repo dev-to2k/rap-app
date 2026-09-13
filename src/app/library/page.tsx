@@ -3,12 +3,13 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createDownloadToken } from "@/lib/signed-url";
-import { SKU_LABELS } from "@/lib/config";
-import { buttonClass, Card, EmptyState, PageHeader, Price } from "@/kit";
+import { buttonClass, Card, Container, EmptyState, PageHeader, Price } from "@/kit";
+import { getT } from "@/i18n/get-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function LibraryPage() {
+  const t = getT();
   const user = await getSession();
   if (!user) redirect("/login");
 
@@ -25,15 +26,16 @@ export default async function LibraryPage() {
   const beatMap = Object.fromEntries(beats.map((b) => [b.id, b]));
 
   return (
-    <div>
-      <PageHeader title="Library" description="License đã unlock — PDF + file tải bằng signed URL." />
+    <Container className="py-8">
+      <PageHeader title={t("library.title")} description={t("library.description")} icon="library" />
       {licenses.length === 0 ? (
         <EmptyState
-          title="Chưa có license nào"
-          description="Mua beat để mở khóa file + PDF."
+          icon="headphones"
+          title={t("library.emptyTitle")}
+          description={t("library.emptyDescription")}
           action={
             <Link href="/" className={buttonClass({ size: "sm" })}>
-              Xem beats
+              {t("library.browse")}
             </Link>
           }
         />
@@ -58,7 +60,7 @@ export default async function LibraryPage() {
                 <Card className="p-4">
                   <h2 className="font-semibold">{beat?.title || lic.beatId}</h2>
                   <p className="text-sm text-muted">
-                    {SKU_LABELS[lic.sku]} · <Price amount={lic.order.amountVnd} className="text-sm" /> ·{" "}
+                    {t(`sku.${lic.sku}`)} · <Price amount={lic.order.amountVnd} className="text-sm" /> ·{" "}
                     {lic.order.status}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -72,7 +74,7 @@ export default async function LibraryPage() {
                       href={`/orders/${lic.orderId}/success`}
                       className={buttonClass({ variant: "ghost", size: "sm" })}
                     >
-                      Chi tiết
+                      {t("library.details")}
                     </Link>
                   </div>
                 </Card>
@@ -81,6 +83,6 @@ export default async function LibraryPage() {
           })}
         </ul>
       )}
-    </div>
+    </Container>
   );
 }

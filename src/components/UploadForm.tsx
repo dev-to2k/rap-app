@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Card, Field, Input, Stepper } from "@/kit";
+import { DEFAULT_CURRENCY } from "@/lib/config";
+import { Button, Card, CurrencyInput, Field, Input, Stepper } from "@/kit";
+import { useT } from "@/i18n/I18nProvider";
 
 export function UploadForm() {
+  const t = useT();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -22,12 +25,12 @@ export function UploadForm() {
 
   async function publish() {
     if (!file) {
-      setError("Chọn file audio");
+      setError(t("upload.pickAudio"));
       return;
     }
     const n = file.name.toLowerCase();
     if (!n.endsWith(".mp3") && !n.endsWith(".wav")) {
-      setError("File không hỗ trợ. Thử MP3 hoặc WAV.");
+      setError(t("upload.badFile"));
       return;
     }
     setBusy(true);
@@ -38,14 +41,14 @@ export function UploadForm() {
     fd.set("bpm", meta.bpm);
     fd.set("musicalKey", meta.musicalKey);
     fd.set("sampleFlag", meta.sampleFlag);
-    fd.set("priceLease", meta.priceLease);
-    fd.set("priceWav", meta.priceWav);
-    fd.set("priceExclusive", meta.priceExclusive);
+    fd.set("priceLease", meta.priceLease.replace(/\D/g, ""));
+    fd.set("priceWav", meta.priceWav.replace(/\D/g, ""));
+    fd.set("priceExclusive", meta.priceExclusive.replace(/\D/g, ""));
     const res = await fetch("/api/upload", { method: "POST", body: fd });
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setError(typeof data.error === "string" ? data.error : "Upload failed");
+      setError(typeof data.error === "string" ? data.error : t("upload.failed"));
       return;
     }
     router.push(`/beats/${data.beat.id}`);
@@ -58,7 +61,7 @@ export function UploadForm() {
 
       {step === 1 && (
         <Card className="space-y-3 p-6">
-          <h2 className="font-medium text-foreground">1. Audio</h2>
+          <h2 className="font-medium text-foreground">{t("upload.audio")}</h2>
           <Input
             type="file"
             accept="audio/*,.mp3,.wav"
@@ -66,22 +69,22 @@ export function UploadForm() {
           />
           {file ? <p className="text-xs text-muted">{file.name}</p> : null}
           <Button className="w-full" disabled={!file} onClick={() => setStep(2)}>
-            Tiếp
+            {t("common.next")}
           </Button>
         </Card>
       )}
 
       {step === 2 && (
         <Card className="space-y-3 p-6">
-          <h2 className="font-medium text-foreground">2. Meta</h2>
-          <Field label="Tiêu đề">
+          <h2 className="font-medium text-foreground">{t("upload.meta")}</h2>
+          <Field label={t("upload.fieldTitle")}>
             <Input value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
           </Field>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="BPM">
+            <Field label={t("upload.bpm")}>
               <Input value={meta.bpm} onChange={(e) => setMeta({ ...meta, bpm: e.target.value })} />
             </Field>
-            <Field label="Key">
+            <Field label={t("upload.key")}>
               <Input
                 value={meta.musicalKey}
                 onChange={(e) => setMeta({ ...meta, musicalKey: e.target.value })}
@@ -90,10 +93,10 @@ export function UploadForm() {
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>
-              Quay lại
+              {t("common.back")}
             </Button>
             <Button className="flex-1" disabled={meta.title.length < 2} onClick={() => setStep(3)}>
-              Tiếp
+              {t("common.next")}
             </Button>
           </div>
         </Card>
@@ -101,7 +104,7 @@ export function UploadForm() {
 
       {step === 3 && (
         <Card className="space-y-3 p-6">
-          <h2 className="font-medium text-foreground">3. Sample flag</h2>
+          <h2 className="font-medium text-foreground">{t("upload.sample")}</h2>
           {(["clean", "uncleared"] as const).map((f) => (
             <button
               key={f}
@@ -113,16 +116,16 @@ export function UploadForm() {
             >
               <div className="font-medium text-foreground">{f}</div>
               <div className="text-xs text-muted">
-                {f === "clean" ? "Có thể bán Exclusive" : "Cấm Exclusive + disclaimer PDF khi mua"}
+                {f === "clean" ? t("upload.cleanHint") : t("upload.unclearedHint")}
               </div>
             </button>
           ))}
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={() => setStep(2)}>
-              Quay lại
+              {t("common.back")}
             </Button>
             <Button className="flex-1" onClick={() => setStep(4)}>
-              Tiếp
+              {t("common.next")}
             </Button>
           </div>
         </Card>
@@ -130,25 +133,30 @@ export function UploadForm() {
 
       {step === 4 && (
         <Card className="space-y-3 p-6">
-          <h2 className="font-medium text-foreground">4. Giá (VND) → Đăng bán</h2>
+          <h2 className="font-medium text-foreground">{t("upload.prices", { currency: DEFAULT_CURRENCY })}</h2>
           {(
             [
-              ["priceLease", "Lease MP3"],
-              ["priceWav", "WAV + Stems"],
-              ["priceExclusive", "Exclusive"],
+              ["priceLease", "sku.lease"],
+              ["priceWav", "sku.wav"],
+              ["priceExclusive", "sku.exclusive"],
             ] as const
-          ).map(([key, label]) => (
-            <Field key={key} label={label}>
-              <Input value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} />
+          ).map(([key, labelKey]) => (
+            <Field key={key} label={t(labelKey)} hint={DEFAULT_CURRENCY}>
+              <CurrencyInput
+                name={key}
+                required
+                value={meta[key]}
+                onChange={(e) => setMeta({ ...meta, [key]: e.target.value })}
+              />
             </Field>
           ))}
           {error ? <p className="text-sm text-danger">{error}</p> : null}
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={() => setStep(3)}>
-              Quay lại
+              {t("common.back")}
             </Button>
             <Button className="flex-1" disabled={busy} onClick={() => void publish()}>
-              {busy ? "Đang đăng…" : "Đăng bán"}
+              {busy ? t("upload.publishing") : t("upload.publish")}
             </Button>
           </div>
         </Card>

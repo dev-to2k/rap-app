@@ -16,11 +16,25 @@
   --danger: 248 113 113;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   color: rgb(var(--foreground));
   background: rgb(var(--background));
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   min-height: 100vh;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: rgb(var(--foreground));
+  caret-color: rgb(var(--foreground));
+  box-shadow: 0 0 0 1000px rgb(var(--surface-2)) inset;
+  transition: background-color 9999s ease-out;
 }
 
 @layer utilities {

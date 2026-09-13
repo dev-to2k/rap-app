@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatVnd, SKU_LABELS } from "@/lib/config";
-import { Alert, Button, Price, Spinner, StickyBar } from "@/kit";
+import { formatVnd } from "@/lib/config";
+import { Alert, Button, Icon, Price, Spinner, StickyBar } from "@/kit";
 import { SkuSelector } from "./SkuSelector";
+import { useT } from "@/i18n/I18nProvider";
 
 type Beat = {
   id: string;
@@ -16,6 +17,7 @@ type Beat = {
 };
 
 export function BuyPanel({ beat }: { beat: Beat }) {
+  const t = useT();
   const router = useRouter();
   const [sku, setSku] = useState<"lease" | "wav" | "exclusive">("lease");
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   async function checkout() {
     setError("");
     if (sku === "exclusive" && beat.sampleFlag === "uncleared") {
-      setError("Có sample chưa clear → chỉ lease; không bán Exclusive.");
+      setError(t("buy.unclearedAlert"));
       return;
     }
     setLoading(true);
@@ -45,7 +47,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        setError("Checkout lỗi — thử lại");
+        setError(t("buy.checkoutError"));
         return;
       }
       if (res.status === 401) {
@@ -53,40 +55,41 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         return;
       }
       if (!res.ok) {
-        setError(data.error || "Checkout failed");
+        setError(data.error || t("buy.checkoutFailed"));
         return;
       }
       if (!data.order?.id) {
-        setError("Không tạo được đơn");
+        setError(t("buy.noOrder"));
         return;
       }
       router.push(`/checkout/${data.order.id}`);
     } catch {
-      setError("Mạng lỗi — thử lại");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
   }
 
   if (soldExclusive) {
-    return (
-      <Alert variant="info">Beat đã bán Exclusive — gỡ bán · không ai mua exclusive lần 2 trên Rap App.</Alert>
-    );
+    return <Alert variant="info">{t("buy.soldExclusive")}</Alert>;
   }
 
   const ctaLabel = loading ? (
     <span className="inline-flex items-center gap-2">
-      <Spinner /> Đang tạo đơn…
+      <Spinner /> {t("buy.creating")}
     </span>
   ) : (
-    `Mua ${SKU_LABELS[sku]} · ${formatVnd(price)}`
+    <>
+      <Icon name="flame" size="sm" />
+      {t("buy.cta", { sku: t(`sku.${sku}`), price: formatVnd(price) })}
+    </>
   );
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Chọn license</h3>
-        <p className="mt-1 text-xs text-muted">MP3 nghe thử / WAV làm bài / Exclusive giữ một mình — giá VND, license rõ.</p>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">{t("buy.chooseLicense")}</h3>
+        <p className="mt-1 text-xs text-muted">{t("buy.chooseHint")}</p>
       </div>
       <SkuSelector
         sku={sku}
@@ -96,10 +99,10 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         status={beat.status}
       />
       {sku === "exclusive" && beat.sampleFlag !== "uncleared" ? (
-        <p className="text-xs text-muted">Trả xong → beat gỡ bán · không ai mua exclusive lần 2 trên Rap App.</p>
+        <p className="text-xs text-muted">{t("buy.exclusiveNote")}</p>
       ) : null}
       {beat.sampleFlag === "uncleared" ? (
-        <Alert variant="warning">Có sample chưa clear → chỉ lease; không bán Exclusive.</Alert>
+        <Alert variant="warning">{t("buy.unclearedAlert")}</Alert>
       ) : null}
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <div className="hidden md:block">
