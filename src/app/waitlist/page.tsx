@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Alert, Button, Chip, Field, Input, PageHeader, Spinner } from "@/kit";
 
 function WaitlistForm() {
   const sp = useSearchParams();
@@ -45,14 +46,16 @@ function WaitlistForm() {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-md space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
-        <h1 className="text-xl font-bold text-white">Đã nhận early access</h1>
-        <p className="text-sm text-zinc-300">Cảm ơn bạn — mình sẽ liên hệ qua email khi mở thêm slot.</p>
-        <Link href="/" className="inline-block text-sm text-emerald-400 hover:underline">
+      <div className="mx-auto max-w-md space-y-4 text-center">
+        <Alert variant="success">
+          <p className="text-base font-bold text-foreground">Đã nhận early access</p>
+          <p className="mt-1 text-sm text-muted">Cảm ơn bạn — mình sẽ liên hệ qua email khi mở thêm slot.</p>
+        </Alert>
+        <Link href="/" className="inline-block text-sm text-accent hover:underline">
           ← Về chợ beat
         </Link>
-        <p className="pt-4 text-left text-[11px] leading-relaxed text-zinc-500">
-Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
+        <p className="pt-4 text-left text-[11px] leading-relaxed text-muted">
+          Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
         </p>
       </div>
     );
@@ -60,69 +63,48 @@ Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tu
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">Xin early access</h1>
-        <p className="text-sm text-zinc-400">
-          Chợ beat VN-first  lease / WAV+stems / exclusive, checkout VND. Không cần thanh toán để vào waitlist.
-        </p>
-      </div>
+      <PageHeader
+        title="Xin early access"
+        description="Chợ beat VN-first — lease / WAV+stems / exclusive, checkout VND. Không cần thanh toán để vào waitlist."
+      />
       <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">Email *</span>
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 outline-none focus:border-emerald-500"
-          />
-        </label>
-        <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">IG / handle</span>
-          <input
-            value={handle}
-            onChange={(e) => setHandle(e.target.value)}
-            placeholder="@yourhandle"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 outline-none focus:border-emerald-500"
-          />
-        </label>
+        <Field label="Email *">
+          <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+        <Field label="IG / handle">
+          <Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@yourhandle" />
+        </Field>
         <fieldset className="space-y-2 text-sm">
-          <legend className="text-zinc-400">Bạn là</legend>
+          <legend className="text-muted">Bạn là</legend>
           <div className="flex gap-3">
             {(["producer", "rapper"] as const).map((r) => (
-              <label
-                key={r}
-                className={`flex-1 cursor-pointer rounded-xl border px-3 py-2 text-center capitalize ${
-                  role === r ? "border-emerald-500 bg-emerald-500/10" : "border-zinc-700"
-                }`}
-              >
-                <input type="radio" className="sr-only" checked={role === r} onChange={() => setRole(r)} />
+              <Chip key={r} selected={role === r} className="flex-1" onClick={() => setRole(r)}>
                 {r}
-              </label>
+              </Chip>
             ))}
           </div>
         </fieldset>
-        <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">Catalog URL (optional)</span>
-          <input
+        <Field label="Catalog URL (tuỳ chọn)">
+          <Input
             type="url"
             value={catalogUrl}
             onChange={(e) => setCatalogUrl(e.target.value)}
             placeholder="https://"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 outline-none focus:border-emerald-500"
           />
-        </label>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-full bg-emerald-600 py-3 font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-        >
-          {loading ? "Đang gửi…" : "Xin early access"}
-        </button>
+        </Field>
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner /> Đang gửi…
+            </span>
+          ) : (
+            "Xin early access"
+          )}
+        </Button>
       </form>
 
-      <p className="text-[11px] leading-relaxed text-zinc-500">
+      <p className="text-[11px] leading-relaxed text-muted">
         Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (`src`/`utm`) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.
       </p>
     </div>
@@ -131,7 +113,7 @@ Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tu
 
 export default function WaitlistPage() {
   return (
-    <Suspense fallback={<p className="text-zinc-400">Loading...</p>}>
+    <Suspense fallback={<p className="text-muted">Đang tải…</p>}>
       <WaitlistForm />
     </Suspense>
   );

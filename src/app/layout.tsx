@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { AudioPlaybackProvider } from "@/components/AudioPlaybackProvider";
+import { Container } from "@/kit";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -22,9 +24,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-50`}>
-        <Nav />
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+        <AudioPlaybackProvider>
+          <Nav />
+          <main>
+            <Container className="py-8">{children}</Container>
+          </main>
+        </AudioPlaybackProvider>
       </body>
     </html>
   );

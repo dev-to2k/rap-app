@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatVnd, SKU_LABELS } from "@/lib/config";
+import { SKU_LABELS } from "@/lib/config";
 import { getSession } from "@/lib/auth";
 import { DownloadButtons } from "@/components/DownloadButtons";
+import { Alert, buttonClass, Card, Price } from "@/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -28,42 +29,39 @@ export default async function LicenseSuccessPage({ params }: { params: { id: str
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-emerald-800/50 bg-emerald-950/30 p-6 text-center">
-        <div className="text-3xl">✓</div>
-        <h1 className="mt-2 text-xl font-bold text-white">License unlocked</h1>
-        <p className="mt-1 text-sm text-zinc-400">Thanh toán OK · webhook verified</p>
-      </div>
+      <Alert variant="success" className="p-6 text-center">
+        <div className="text-3xl text-accent">✓</div>
+        <h1 className="mt-2 text-xl font-bold text-foreground">License đã mở</h1>
+        <p className="mt-1 text-sm text-muted">Thanh toán OK · webhook verified</p>
+      </Alert>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 space-y-2 text-sm">
+      <Card className="space-y-2 p-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-zinc-400">Beat</span>
-          <span className="text-white">{beat.title}</span>
+          <span className="text-muted">Beat</span>
+          <span className="text-foreground">{beat.title}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-zinc-400">SKU</span>
-          <span className="text-white">{SKU_LABELS[license.sku]}</span>
+          <span className="text-muted">SKU</span>
+          <span className="text-foreground">{SKU_LABELS[license.sku]}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-zinc-400">Paid</span>
-          <span className="text-violet-300">{formatVnd(license.order.amountVnd)}</span>
+          <span className="text-muted">Đã trả</span>
+          <Price amount={license.order.amountVnd} className="text-sm" />
         </div>
         <div className="flex justify-between">
-          <span className="text-zinc-400">License ID</span>
-          <span className="font-mono text-xs text-zinc-300">{license.id}</span>
+          <span className="text-muted">License ID</span>
+          <span className="font-mono text-xs text-muted">{license.id}</span>
         </div>
-        {beat.sampleFlag === "uncleared" && (
-          <p className="rounded-lg bg-amber-950/40 p-2 text-xs text-amber-300">
+        {beat.sampleFlag === "uncleared" ? (
+          <Alert variant="warning" className="p-2 text-xs">
             PDF có disclaimer uncleared samples.
-          </p>
-        )}
-      </div>
+          </Alert>
+        ) : null}
+      </Card>
 
       <DownloadButtons licenseId={license.id} />
 
-      <Link
-        href="/library"
-        className="block w-full rounded-full border border-zinc-700 py-3 text-center text-sm text-white hover:bg-zinc-900"
-      >
+      <Link href="/library" className={buttonClass({ variant: "secondary", className: "w-full" })}>
         Xem Library →
       </Link>
     </div>

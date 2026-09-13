@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createDownloadToken } from "@/lib/signed-url";
-import { formatVnd, SKU_LABELS } from "@/lib/config";
+import { SKU_LABELS } from "@/lib/config";
+import { Alert, buttonClass, Card, PageHeader, Price } from "@/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +20,12 @@ export default async function SuccessPage({ params }: { params: { orderId: strin
 
   if (order.status !== "unlocked" || !order.license) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center">
-        <p className="text-lg">Chưa thanh toán — file chưa mở.</p>
-        <Link href={`/checkout/${order.id}`} className="mt-4 inline-block text-emerald-400 underline">
+      <Alert variant="warning" className="text-center">
+        <p className="text-lg text-foreground">Chưa thanh toán — file chưa mở.</p>
+        <Link href={`/checkout/${order.id}`} className="mt-4 inline-block text-accent underline">
           Quay lại checkout
         </Link>
-      </div>
+      </Alert>
     );
   }
 
@@ -43,20 +44,18 @@ export default async function SuccessPage({ params }: { params: { orderId: strin
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold text-emerald-400">Thanh toán OK</h1>
-      <p className="text-zinc-400">
-        {order.beat.title} · {SKU_LABELS[order.sku]} · {formatVnd(order.amountVnd)}
+      <PageHeader title="Thanh toán OK" />
+      <p className="text-muted">
+        {order.beat.title} · {SKU_LABELS[order.sku]} · <Price amount={order.amountVnd} className="text-base" />
       </p>
-      <ul className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <Card className="space-y-2 p-4">
         {downloads.map((d) => (
-          <li key={d.fileKind}>
-            <a className="text-emerald-400 underline" href={d.url}>
-              Tải {d.fileKind.toUpperCase()}
-            </a>
-          </li>
+          <a key={d.fileKind} href={d.url} className={buttonClass({ className: "w-full" })}>
+            Tải {d.fileKind.toUpperCase()}
+          </a>
         ))}
-      </ul>
-      <Link href="/library" className="inline-block text-sm text-zinc-400 underline">
+      </Card>
+      <Link href="/library" className={buttonClass({ variant: "ghost", size: "sm" })}>
         Vào Library
       </Link>
     </div>

@@ -1,15 +1,19 @@
 import Link from "next/link";
+import { buttonClass, EmptyState, PageHeader } from "@/kit";
 
 export default function ProducerSalesStub() {
   return (
-    <main className="mx-auto max-w-md px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
-      <p className="mt-2 text-[color:var(--muted)] text-sm">
-        Stub: đơn bán + Exclusive sold lock. Chi tiết Design pack sau.
-      </p>
-      <Link href="/library" className="mt-6 inline-block text-sm text-[color:var(--accent)]">
-        ← Library / catalog
-      </Link>
-    </main>
+    <div className="mx-auto max-w-md">
+      <PageHeader title="Sales" description="Stub: đơn bán + Exclusive sold lock. Chi tiết sau." />
+      <EmptyState
+        title="Chưa có dashboard sales"
+        description="Danh sách đơn và lock Exclusive sẽ lên ở bản sau."
+        action={
+          <Link href="/" className={buttonClass({ size: "sm" })}>
+            ← Catalog
+          </Link>
+        }
+      />
+    </div>
   );
 }

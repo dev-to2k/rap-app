@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { LoginForm } from "@/components/LoginForm";
+import { Card, PageHeader } from "@/kit";
 
 export default async function LoginPage({
   searchParams,
@@ -10,18 +11,18 @@ export default async function LoginPage({
   const user = await getSession();
   if (user) redirect(searchParams.next || "/");
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-bold text-white">Login</h1>
-      <p className="text-sm text-zinc-400">
-        Credentials stub · demo accounts bên dưới. Magic-link có thể thay sau.
-      </p>
+    <div className="mx-auto max-w-md space-y-4">
+      <PageHeader
+        title="Đăng nhập"
+        description="Credentials stub · tài khoản demo bên dưới. Magic-link có thể thay sau."
+      />
       <LoginForm next={searchParams.next || "/"} />
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-xs text-zinc-400 space-y-1">
-        <p className="font-medium text-zinc-300">Seed accounts (password: password123)</p>
+      <Card className="space-y-1 p-4 font-mono text-xs text-muted">
+        <p className="font-sans font-medium text-foreground">Tài khoản seed (password: password123)</p>
         <p>buyer@rap.app — buyer</p>
         <p>producer@rap.app — producer</p>
         <p>minhprod@rap.app — producer</p>
-      </div>
+      </Card>
     </div>
   );
 }

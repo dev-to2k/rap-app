@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { formatVnd } from "@/lib/config";
+import { Alert, Button, Card, PageHeader, Price, Spinner } from "@/kit";
 
 type Order = {
   id: string;
@@ -24,6 +24,7 @@ export default function CheckoutPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [msg, setMsg] = useState("Chọn Thanh toán MoMo để tiếp tục");
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -41,8 +42,10 @@ export default function CheckoutPage() {
         if (res.ok && data.order) {
           setOrder(data.order);
           if (data.order.status === "unlocked") setMsg("Thanh toán OK");
-          else if (data.order.status === "failed") setMsg("Chưa thanh toán — file chưa mở.");
-          else setMsg("Đang chờ thanh toán…");
+          else if (data.order.status === "failed") {
+            setMsg("Chưa thanh toán — file chưa mở.");
+            setFailed(true);
+          } else setMsg("Đang chờ thanh toán…");
         }
       } catch {
         if (!cancelled) setMsg("Không tải được đơn — thử lại");
@@ -56,6 +59,7 @@ export default function CheckoutPage() {
   async function mockPay(fail = false) {
     if (!orderId) return;
     setBusy(true);
+    setFailed(false);
     setMsg("Đang xác nhận thanh toán…");
     try {
       const res = await fetch("/api/pay/mock", {
@@ -85,6 +89,7 @@ export default function CheckoutPage() {
       }
       if (!res.ok || data.paid === false || data.order?.status === "failed") {
         setMsg(data.error || "Chưa thanh toán — file chưa mở.");
+        setFailed(true);
         if (data.order) setOrder(data.order);
         return;
       }
@@ -100,33 +105,26 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-4">
-      <h1 className="text-2xl font-bold">Checkout</h1>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-        <p className="text-zinc-400">Order: {orderId}</p>
-        {order?.amountVnd ? <p className="mt-2 text-lg">{formatVnd(order.amountVnd)}</p> : null}
-        <p className="mt-4 text-sm">{msg}</p>
-        <p className="mt-4 text-xs leading-relaxed text-zinc-400">
-          Trả ví nền tảng → PDF + file. Không CK riêng producer.
-        </p>
-        <div className="mt-6 flex flex-col gap-2">
-          <button
-            type="button"
-            disabled={busy || !orderId}
-            onClick={() => void mockPay(false)}
-            className="rounded-lg bg-[color:var(--accent)] py-2 font-medium text-[#0B0B0C] hover:opacity-90 disabled:opacity-50"
-          >
-            Thanh toán MoMo
-          </button>
-          <button
-            type="button"
-            disabled={busy || !orderId}
-            onClick={() => void mockPay(true)}
-            className="rounded-lg bg-zinc-800 py-2 text-sm hover:bg-zinc-700 disabled:opacity-50"
-          >
+      <PageHeader title="Checkout" description="Trả ví nền tảng → PDF + file. Không CK riêng producer." />
+      <Card className="space-y-4 p-6">
+        <p className="font-mono text-xs text-muted">Đơn: {orderId}</p>
+        {order?.amountVnd ? <Price amount={order.amountVnd} className="text-2xl" /> : null}
+        {failed ? <Alert variant="danger">{msg}</Alert> : <p className="text-sm text-muted">{msg}</p>}
+        <div className="flex flex-col gap-2">
+          <Button disabled={busy || !orderId} onClick={() => void mockPay(false)}>
+            {busy ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner /> Đang xác nhận…
+              </span>
+            ) : (
+              "Thanh toán MoMo"
+            )}
+          </Button>
+          <Button variant="secondary" disabled={busy || !orderId} onClick={() => void mockPay(true)}>
             Mock fail
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

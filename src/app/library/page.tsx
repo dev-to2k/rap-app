@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createDownloadToken } from "@/lib/signed-url";
-import { formatVnd, SKU_LABELS } from "@/lib/config";
+import { SKU_LABELS } from "@/lib/config";
+import { buttonClass, Card, EmptyState, PageHeader, Price } from "@/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,19 @@ export default async function LibraryPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Library</h1>
+      <PageHeader title="Library" description="License đã unlock — PDF + file tải bằng signed URL." />
       {licenses.length === 0 ? (
-        <p className="text-zinc-400">Chưa có license nào. Mua beat để mở khóa file + PDF.</p>
+        <EmptyState
+          title="Chưa có license nào"
+          description="Mua beat để mở khóa file + PDF."
+          action={
+            <Link href="/" className={buttonClass({ size: "sm" })}>
+              Xem beats
+            </Link>
+          }
+        />
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {licenses.map((lic) => {
             const beat = beatMap[lic.beatId];
             const { token: pdfToken } = createDownloadToken({
@@ -45,22 +54,28 @@ export default async function LibraryPage() {
               fileKind: "mp3",
             });
             return (
-              <li key={lic.id} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                <h2 className="font-semibold">{beat?.title || lic.beatId}</h2>
-                <p className="text-sm text-zinc-400">
-                  {SKU_LABELS[lic.sku]} · {formatVnd(lic.order.amountVnd)} · {lic.order.status}
-                </p>
-                <div className="mt-2 flex gap-3 text-sm">
-                  <a className="text-emerald-400 underline" href={`/api/download/${pdfToken}`}>
-                    PDF
-                  </a>
-                  <a className="text-emerald-400 underline" href={`/api/download/${mp3Token}`}>
-                    MP3
-                  </a>
-                  <Link className="text-zinc-400 underline" href={`/orders/${lic.orderId}/success`}>
-                    Chi tiết
-                  </Link>
-                </div>
+              <li key={lic.id}>
+                <Card className="p-4">
+                  <h2 className="font-semibold">{beat?.title || lic.beatId}</h2>
+                  <p className="text-sm text-muted">
+                    {SKU_LABELS[lic.sku]} · <Price amount={lic.order.amountVnd} className="text-sm" /> ·{" "}
+                    {lic.order.status}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <a href={`/api/download/${pdfToken}`} className={buttonClass({ size: "sm" })}>
+                      PDF
+                    </a>
+                    <a href={`/api/download/${mp3Token}`} className={buttonClass({ variant: "secondary", size: "sm" })}>
+                      MP3
+                    </a>
+                    <Link
+                      href={`/orders/${lic.orderId}/success`}
+                      className={buttonClass({ variant: "ghost", size: "sm" })}
+                    >
+                      Chi tiết
+                    </Link>
+                  </div>
+                </Card>
               </li>
             );
           })}

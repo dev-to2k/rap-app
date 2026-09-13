@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, Button, Card, Field, Input, PageHeader, Select, Textarea } from "@/kit";
 
 const REASONS = [
   "PAYMENT_ISSUE",
@@ -15,6 +16,7 @@ export default function SupportPage() {
   const [reason, setReason] = useState<(typeof REASONS)[number]>("PAYMENT_ISSUE");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState("");
+  const [ok, setOk] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,49 +26,38 @@ export default function SupportPage() {
       body: JSON.stringify({ orderId, reason_code: reason, message }),
     });
     const data = await res.json();
+    setOk(res.ok);
     setResult(res.ok ? `Ticket ${data.ticketId}: ${data.message}` : data.error || "Error");
   }
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-2xl font-bold">Support</h1>
-      <form onSubmit={submit} className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-        <label className="block text-sm">
-          ORDER_ID
-          <input
-            value={orderId}
-            onChange={(e) => setOrderId(e.target.value)}
-            required
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
-          />
-        </label>
-        <label className="block text-sm">
-          reason_code
-          <select
-            value={reason}
-            onChange={(e) => setReason(e.target.value as (typeof REASONS)[number])}
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
-          >
-            {REASONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm">
-          Message
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
-            rows={3}
-          />
-        </label>
-        <button type="submit" className="w-full rounded-lg bg-emerald-600 py-2 font-medium hover:bg-emerald-500">
-          Gửi ticket
-        </button>
-        {result && <p className="text-sm text-emerald-300">{result}</p>}
+      <PageHeader title="Support" description="Gửi ticket theo ORDER_ID — thanh toán, tải file, Exclusive, SKU." />
+      <form onSubmit={submit}>
+        <Card className="space-y-4 p-6">
+          <Field label="ORDER_ID">
+            <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} required />
+          </Field>
+          <Field label="Lý do">
+            <Select
+              value={reason}
+              onChange={(e) => setReason(e.target.value as (typeof REASONS)[number])}
+            >
+              {REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Nội dung">
+            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} />
+          </Field>
+          <Button type="submit" className="w-full">
+            Gửi ticket
+          </Button>
+          {result ? <Alert variant={ok ? "success" : "danger"}>{result}</Alert> : null}
+        </Card>
       </form>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button, Card, Field, Input, Stepper } from "@/kit";
 
 export function UploadForm() {
   const router = useRouter();
@@ -24,12 +25,23 @@ export function UploadForm() {
       setError("Chọn file audio");
       return;
     }
+    const n = file.name.toLowerCase();
+    if (!n.endsWith(".mp3") && !n.endsWith(".wav")) {
+      setError("File không hỗ trợ. Thử MP3 hoặc WAV.");
+      return;
+    }
     setBusy(true);
     setError("");
     const fd = new FormData();
-    fd.set("audio", file);
-    Object.entries(meta).forEach(([k, v]) => fd.set(k, v));
-    const res = await fetch("/api/beats", { method: "POST", body: fd });
+    fd.set("file", file);
+    fd.set("title", meta.title);
+    fd.set("bpm", meta.bpm);
+    fd.set("musicalKey", meta.musicalKey);
+    fd.set("sampleFlag", meta.sampleFlag);
+    fd.set("priceLease", meta.priceLease);
+    fd.set("priceWav", meta.priceWav);
+    fd.set("priceExclusive", meta.priceExclusive);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
@@ -41,118 +53,84 @@ export function UploadForm() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2 text-xs text-zinc-500">
-        {[1, 2, 3, 4].map((s) => (
-          <span
-            key={s}
-            className={`rounded-full px-2 py-1 ${step === s ? "bg-violet-600 text-white" : "bg-zinc-800"}`}
-          >
-            {s}
-          </span>
-        ))}
-      </div>
+    <div className="mx-auto max-w-lg space-y-4">
+      <Stepper steps={4} current={step} />
 
       {step === 1 && (
-        <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-          <h2 className="font-medium text-white">1. Audio</h2>
-          <input
+        <Card className="space-y-3 p-6">
+          <h2 className="font-medium text-foreground">1. Audio</h2>
+          <Input
             type="file"
             accept="audio/*,.mp3,.wav"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-zinc-300"
           />
-          {file && <p className="text-xs text-zinc-400">{file.name}</p>}
-          <button
-            type="button"
-            disabled={!file}
-            onClick={() => setStep(2)}
-            className="w-full rounded-full bg-violet-600 py-2 text-white disabled:opacity-40"
-          >
+          {file ? <p className="text-xs text-muted">{file.name}</p> : null}
+          <Button className="w-full" disabled={!file} onClick={() => setStep(2)}>
             Tiếp
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {step === 2 && (
-        <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-          <h2 className="font-medium text-white">2. Meta</h2>
-          <label className="block text-xs text-zinc-400">
-            Title
-            <input
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
-              value={meta.title}
-              onChange={(e) => setMeta({ ...meta, title: e.target.value })}
-            />
-          </label>
+        <Card className="space-y-3 p-6">
+          <h2 className="font-medium text-foreground">2. Meta</h2>
+          <Field label="Tiêu đề">
+            <Input value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
+          </Field>
           <div className="grid grid-cols-2 gap-2">
-            <label className="block text-xs text-zinc-400">
-              BPM
-              <input
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
-                value={meta.bpm}
-                onChange={(e) => setMeta({ ...meta, bpm: e.target.value })}
-              />
-            </label>
-            <label className="block text-xs text-zinc-400">
-              Key
-              <input
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+            <Field label="BPM">
+              <Input value={meta.bpm} onChange={(e) => setMeta({ ...meta, bpm: e.target.value })} />
+            </Field>
+            <Field label="Key">
+              <Input
                 value={meta.musicalKey}
                 onChange={(e) => setMeta({ ...meta, musicalKey: e.target.value })}
               />
-            </label>
+            </Field>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setStep(1)} className="flex-1 rounded-full bg-zinc-800 py-2 text-white">
-              Back
-            </button>
-            <button
-              type="button"
-              disabled={meta.title.length < 2}
-              onClick={() => setStep(3)}
-              className="flex-1 rounded-full bg-violet-600 py-2 text-white disabled:opacity-40"
-            >
+            <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>
+              Quay lại
+            </Button>
+            <Button className="flex-1" disabled={meta.title.length < 2} onClick={() => setStep(3)}>
               Tiếp
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {step === 3 && (
-        <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-          <h2 className="font-medium text-white">3. Sample flag</h2>
+        <Card className="space-y-3 p-6">
+          <h2 className="font-medium text-foreground">3. Sample flag</h2>
           {(["clean", "uncleared"] as const).map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => setMeta({ ...meta, sampleFlag: f })}
               className={`w-full rounded-xl border p-3 text-left ${
-                meta.sampleFlag === f ? "border-violet-500 bg-violet-950/40" : "border-zinc-700"
+                meta.sampleFlag === f ? "border-accent bg-accent/10" : "border-border"
               }`}
             >
-              <div className="font-medium text-white">{f}</div>
-              <div className="text-xs text-zinc-400">
-                {f === "clean"
-                  ? "Có thể bán Exclusive"
-                  : "Cấm Exclusive + disclaimer PDF khi mua"}
+              <div className="font-medium text-foreground">{f}</div>
+              <div className="text-xs text-muted">
+                {f === "clean" ? "Có thể bán Exclusive" : "Cấm Exclusive + disclaimer PDF khi mua"}
               </div>
             </button>
           ))}
           <div className="flex gap-2">
-            <button type="button" onClick={() => setStep(2)} className="flex-1 rounded-full bg-zinc-800 py-2 text-white">
-              Back
-            </button>
-            <button type="button" onClick={() => setStep(4)} className="flex-1 rounded-full bg-violet-600 py-2 text-white">
+            <Button variant="secondary" className="flex-1" onClick={() => setStep(2)}>
+              Quay lại
+            </Button>
+            <Button className="flex-1" onClick={() => setStep(4)}>
               Tiếp
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {step === 4 && (
-        <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-          <h2 className="font-medium text-white">4. Giá (VND) → Publish</h2>
+        <Card className="space-y-3 p-6">
+          <h2 className="font-medium text-foreground">4. Giá (VND) → Đăng bán</h2>
           {(
             [
               ["priceLease", "Lease MP3"],
@@ -160,30 +138,20 @@ export function UploadForm() {
               ["priceExclusive", "Exclusive"],
             ] as const
           ).map(([key, label]) => (
-            <label key={key} className="block text-xs text-zinc-400">
-              {label}
-              <input
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
-                value={meta[key]}
-                onChange={(e) => setMeta({ ...meta, [key]: e.target.value })}
-              />
-            </label>
+            <Field key={key} label={label}>
+              <Input value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} />
+            </Field>
           ))}
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
           <div className="flex gap-2">
-            <button type="button" onClick={() => setStep(3)} className="flex-1 rounded-full bg-zinc-800 py-2 text-white">
-              Back
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void publish()}
-              className="flex-1 rounded-full bg-violet-600 py-2 font-semibold text-white disabled:opacity-40"
-            >
-              {busy ? "Publishing…" : "Publish"}
-            </button>
+            <Button variant="secondary" className="flex-1" onClick={() => setStep(3)}>
+              Quay lại
+            </Button>
+            <Button className="flex-1" disabled={busy} onClick={() => void publish()}>
+              {busy ? "Đang đăng…" : "Đăng bán"}
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

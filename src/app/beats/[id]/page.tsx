@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BuyPanel } from "@/components/BuyPanel";
-import { formatVnd } from "@/lib/config";
+import { BeatPlayer } from "@/components/BeatPlayer";
+import { Badge } from "@/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -13,27 +14,20 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
   if (!beat) notFound();
 
   return (
-    <div className="grid gap-8 md:grid-cols-2">
+    <div className="grid gap-8 pb-24 md:grid-cols-2 md:pb-8">
       <div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={beat.coverUrl || "/covers/beat1.svg"}
-          alt=""
-          className="mb-4 aspect-square w-full max-w-md rounded-xl bg-zinc-800 object-cover"
-        />
-        <h1 className="text-3xl font-bold">{beat.title}</h1>
-        <p className="mt-2 text-zinc-400">
-          {beat.producer.name} · {beat.bpm} BPM · {beat.musicalKey} · sample: {beat.sampleFlag}
+        <BeatPlayer id={beat.id} coverUrl={beat.coverUrl} audioUrl={beat.audioUrl} />
+        <h1 className="text-3xl font-bold tracking-tight">{beat.title}</h1>
+        <p className="mt-2 text-muted">
+          {beat.producer.name} · {beat.bpm} BPM · {beat.musicalKey}
         </p>
-        <p className="mt-4 text-sm text-zinc-500">
-          MP3 / WAV / Exclusive — Lease {formatVnd(beat.priceLease)} · WAV {formatVnd(beat.priceWav)} · Exclusive{" "}
-          {formatVnd(beat.priceExclusive)}
+        <p className="mt-2">
+          {beat.sampleFlag === "uncleared" ? (
+            <Badge variant="warning">uncleared</Badge>
+          ) : (
+            <Badge variant="accent">clean</Badge>
+          )}
         </p>
-        {beat.audioUrl && (
-          <audio className="mt-4 w-full" controls src={`/api/preview?path=${encodeURIComponent(beat.audioUrl)}`}>
-            Preview
-          </audio>
-        )}
       </div>
       <BuyPanel
         beat={{
