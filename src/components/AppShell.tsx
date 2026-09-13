@@ -16,7 +16,8 @@ type User = { name: string; role: string } | null;
 
 export function AppShell({ user, children }: { user: User; children: ReactNode }) {
   const path = usePathname();
-  const studio = path.startsWith("/studio") || path.startsWith("/producer");
+  const studio =
+    path.startsWith("/studio") || path.startsWith("/producer") || path === "/upload";
   const t = useT();
 
   if (studio) {

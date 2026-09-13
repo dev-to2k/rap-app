@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Card, CoverArt, Icon, PlayButton, Price, Waveform } from "@/kit";
+import { Badge, Card, CoverArt, Icon, PlayButton, Price, Truncate, Waveform } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { mockPlays, tagForTitle } from "@/lib/beat-tags";
 import { useAudioPlayback } from "./AudioPlaybackProvider";
@@ -33,31 +33,33 @@ export function BeatCard(props: Props) {
       <Card className="flex items-center gap-4 p-3 transition hover:border-accent/40">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
           <CoverArt src={props.coverUrl || "/covers/beat1.svg"} className="h-full w-full" />
-          <PlayButton
-            playing={isThis}
-            onClick={() =>
-              toggle({
-                id: props.id,
-                title: props.title,
-                producer: props.producer,
-                coverUrl: props.coverUrl,
-                href: `/beats/${props.id}`,
-                audioSrc,
-              })
-            }
-            overlay
-            label={isThis ? t("common.pause") : t("common.play")}
-          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+            <PlayButton
+              playing={isThis}
+              size="sm"
+              onClick={() =>
+                toggle({
+                  id: props.id,
+                  title: props.title,
+                  producer: props.producer,
+                  coverUrl: props.coverUrl,
+                  href: `/beats/${props.id}`,
+                  audioSrc,
+                })
+              }
+              label={isThis ? t("common.pause") : t("common.play")}
+            />
+          </div>
         </div>
         <Link href={`/beats/${props.id}`} className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate font-medium text-foreground">{props.title}</span>
+            <Truncate className="font-medium text-foreground">{props.title}</Truncate>
             <Badge variant="default">{tagLabel}</Badge>
             {props.sampleFlag === "uncleared" ? <Badge variant="warning">uncleared</Badge> : null}
           </div>
-          <div className="mt-1 truncate text-xs text-muted">
+          <Truncate as="div" className="mt-1 text-xs text-muted">
             {props.producer} · {props.bpm} BPM · {props.musicalKey}
-          </div>
+          </Truncate>
           <Waveform active={isThis} className="mt-2" />
         </Link>
         <div className="hidden shrink-0 text-xs text-muted sm:block">{t("home.plays", { n: mockPlays(props.id) })}</div>

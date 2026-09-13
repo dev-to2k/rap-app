@@ -51,7 +51,9 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         return;
       }
       if (res.status === 401) {
-        router.push("/login?next=" + encodeURIComponent(`/beats/${beat.id}`));
+        const { setPendingBuy } = await import("@/lib/pending-buy");
+        setPendingBuy({ beatId: beat.id, sku });
+        router.push("/login?next=" + encodeURIComponent("/checkout/resume"));
         return;
       }
       if (!res.ok) {

@@ -53,7 +53,7 @@ export function MarketTopBar({ user }: { user: User }) {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitch />
-          <Link href="/upload" className={buttonClass({ variant: "secondary", size: "sm", className: "hidden sm:inline-flex" })}>
+          <Link href="/studio/upload" className={buttonClass({ variant: "secondary", size: "sm", className: "hidden sm:inline-flex" })}>
             <Icon name="upload" size="sm" />
             {t("shell.sell")}
           </Link>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { buttonClass, Button, Icon, type IconName } from "@/kit";
+import { buttonClass, Button, Icon, Truncate, type IconName } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 type User = { name: string; role: string } | null;
@@ -41,7 +41,7 @@ export function NavAuth({ user }: { user: User }) {
   if (user) {
     return (
       <div className="hidden items-center gap-2 text-sm text-muted lg:flex">
-        <span className="max-w-[9rem] truncate">{user.name}</span>
+        <Truncate className="max-w-[9rem]">{user.name}</Truncate>
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"

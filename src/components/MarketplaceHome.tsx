@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chip, Container, EmptyState } from "@/kit";
+import { Checkbox, Chip, Container, EmptyState } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { BEAT_TAGS, mockPlays, tagForTitle, type BeatTag } from "@/lib/beat-tags";
 import { BeatCard } from "./BeatCard";
@@ -81,15 +81,14 @@ export function MarketplaceHome({
           <p className="text-sm text-muted">
             {beats.length ? `${Math.min(...beats.map((b) => b.bpm))}–${Math.max(...beats.map((b) => b.bpm))}` : "—"}
           </p>
-          <label className="mt-6 flex items-center gap-2 text-sm text-muted">
-            <input
-              type="checkbox"
-              checked={exclusiveOnly}
-              onChange={(e) => setExclusiveOnly(e.target.checked)}
-              className="accent-accent"
-            />
+          <Checkbox
+            className="mt-6 text-muted"
+            name="exclusiveOpen"
+            checked={exclusiveOnly}
+            onChange={(e) => setExclusiveOnly(e.target.checked)}
+          >
             {t("home.exclusiveOpen")}
-          </label>
+          </Checkbox>
         </aside>
         <div>
           <div className="mb-4 flex gap-2 overflow-x-auto lg:hidden">

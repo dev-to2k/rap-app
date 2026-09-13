@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Button, Card, PageHeader, Price, Spinner } from "@/kit";
+import { Alert, Button, Card, Container, PageHeader, Price, Spinner } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 type Order = {
@@ -24,13 +24,9 @@ export default function CheckoutPage() {
   }, [params]);
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setMsg(t("checkout.chooseMomo"));
-  }, [t]);
+  const dev = process.env.NODE_ENV === "development";
 
   useEffect(() => {
     if (!orderId) return;
@@ -45,16 +41,10 @@ export default function CheckoutPage() {
           router.push("/login?next=" + encodeURIComponent(`/checkout/${orderId}`));
           return;
         }
-        if (res.ok && data.order) {
-          setOrder(data.order);
-          if (data.order.status === "unlocked") setMsg(t("checkout.paid"));
-          else if (data.order.status === "failed") {
-            setMsg(t("checkout.unpaid"));
-            setFailed(true);
-          } else setMsg(t("checkout.waiting"));
-        }
+        if (res.ok && data.order) setOrder(data.order);
+        else setError(t("checkout.loadError"));
       } catch {
-        if (!cancelled) setMsg(t("checkout.loadError"));
+        if (!cancelled) setError(t("checkout.loadError"));
       }
     })();
     return () => {
@@ -65,8 +55,7 @@ export default function CheckoutPage() {
   async function mockPay(fail = false) {
     if (!orderId) return;
     setBusy(true);
-    setFailed(false);
-    setMsg(t("checkout.confirming"));
+    setError("");
     try {
       const res = await fetch("/api/pay/mock", {
         method: "POST",
@@ -74,15 +63,11 @@ export default function CheckoutPage() {
         body: JSON.stringify({ orderId, fail }),
       });
       const text = await res.text();
-      let data: {
-        paid?: boolean;
-        order?: Order;
-        error?: string;
-      } = {};
+      let data: { paid?: boolean; order?: Order; error?: string } = {};
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        setMsg(t("checkout.payError"));
+        setError(t("checkout.payError"));
         return;
       }
       if (res.status === 401) {
@@ -90,47 +75,56 @@ export default function CheckoutPage() {
         return;
       }
       if (res.status === 404) {
-        setMsg(data.error || t("checkout.mockOff"));
+        setError(data.error || t("checkout.mockOff"));
         return;
       }
-      if (!res.ok || data.paid === false || data.order?.status === "failed") {
-        setMsg(data.error || t("checkout.unpaid"));
-        setFailed(true);
-        if (data.order) setOrder(data.order);
-        return;
-      }
-      setMsg(t("checkout.paid"));
       if (data.order) setOrder(data.order);
+      if (!res.ok || data.paid === false || data.order?.status === "failed") {
+        setError(data.error || t("checkout.unpaid"));
+        return;
+      }
       router.push(`/orders/${orderId}/success`);
     } catch {
-      setMsg(t("common.networkError"));
+      setError(t("common.networkError"));
     } finally {
       setBusy(false);
     }
   }
 
+  const failed = Boolean(error) || order?.status === "failed";
+  const statusText = error
+    ? error
+    : order?.status === "unlocked"
+      ? t("checkout.paid")
+      : t("checkout.waiting");
+
   return (
-    <div className="mx-auto max-w-md space-y-4">
+    <Container className="mx-auto max-w-md space-y-4 py-8">
       <PageHeader title={t("checkout.title")} description={t("checkout.description")} icon="wallet" />
       <Card className="space-y-4 p-6">
         <p className="font-mono text-xs text-muted">{t("checkout.order", { id: orderId })}</p>
-        {order?.amountVnd ? <Price amount={order.amountVnd} className="text-2xl" /> : null}
-        {failed ? <Alert variant="danger">{msg}</Alert> : <p className="text-sm text-muted">{msg}</p>}
-        <div className="flex flex-col gap-2">
-          <Button disabled={busy || !orderId} onClick={() => void mockPay(false)}>
-            {busy ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner /> {t("checkout.confirming")}
-              </span>
-            ) : (
-              t("checkout.payMomo")
-            )}
-          </Button>
+        {order?.sku ? <p className="text-sm">{t(`sku.${order.sku}`)}</p> : null}
+        <div>
+          <p className="text-xs text-muted">{t("checkout.amountDue")}</p>
+          {order?.amountVnd ? <Price amount={order.amountVnd} className="text-2xl" /> : null}
+        </div>
+        <Alert variant="info">{t("checkout.platformNote")}</Alert>
+        {failed ? <Alert variant="danger">{statusText}</Alert> : <p className="text-sm text-muted">{statusText}</p>}
+        <Button className="w-full" disabled={busy || !orderId} onClick={() => void mockPay(false)}>
+          {busy ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner /> {t("checkout.confirming")}
+            </span>
+          ) : (
+            t("checkout.payMomo")
+          )}
+        </Button>
+        {dev ? (
           <Button variant="secondary" disabled={busy || !orderId} onClick={() => void mockPay(true)}>
             {t("checkout.mockFail")}
           </Button>
-        </div>
+        ) : null}
       </Card>
-    </div>
+    </Container>
   );
 }

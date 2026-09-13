@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 const ALLOWED = new Set(["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave"]);
 
 export async function POST(req: NextRequest) {
-  const user = await requireUser(["producer"]);
-  if (!user) return NextResponse.json({ error: "Cần đăng nhập producer" }, { status: 401 });
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Cần đăng nhập" }, { status: 401 });
 
   const form = await req.formData();
   const title = String(form.get("title") || "").trim();

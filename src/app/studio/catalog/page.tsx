@@ -36,7 +36,7 @@ export default async function StudioCatalogPage() {
         title={t("studio.catalog")}
         icon="disc"
         action={
-          <Link href="/upload" className={buttonClass({ size: "sm" })}>
+            <Link href="/studio/upload" className={buttonClass({ size: "sm" })}>
             <Icon name="upload" size="sm" />
             {t("studio.upload")}
           </Link>
@@ -47,7 +47,7 @@ export default async function StudioCatalogPage() {
           icon="disc"
           title={t("home.emptyTitle")}
           action={
-            <Link href="/upload" className={buttonClass({ size: "sm" })}>
+          <Link href="/studio/upload" className={buttonClass({ size: "sm" })}>
               {t("studio.upload")}
             </Link>
           }

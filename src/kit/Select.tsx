@@ -14,6 +14,7 @@ import {
   type SelectHTMLAttributes,
 } from "react";
 import { cn, radius } from "./cn";
+import { Truncate } from "./Truncate";
 import { controlClass } from "./control";
 
 export type SelectOption = {
@@ -125,9 +126,9 @@ export function Select({
         onClick={() => setOpen((v) => !v)}
         className={controlClass("flex items-center justify-between gap-3 pr-3 text-left")}
       >
-        <span className={cn("truncate", !selected && "text-muted/45")}>
+        <Truncate className={cn("flex-1", !selected && "text-muted/45")}>
           {selected?.label ?? placeholder}
-        </span>
+        </Truncate>
         <svg
           viewBox="0 0 20 20"
           fill="none"

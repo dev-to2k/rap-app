@@ -8,7 +8,7 @@ import { useT } from "@/i18n/I18nProvider";
 const ITEMS: { href: string; key: string; icon: IconName }[] = [
   { href: "/studio", key: "studio.overview", icon: "dashboard" },
   { href: "/studio/catalog", key: "studio.catalog", icon: "disc" },
-  { href: "/upload", key: "studio.upload", icon: "upload" },
+  { href: "/studio/upload", key: "studio.upload", icon: "upload" },
   { href: "/studio/orders", key: "studio.orders", icon: "ticket" },
   { href: "/studio/wallet", key: "studio.wallet", icon: "wallet" },
   { href: "/", key: "studio.storefront", icon: "store" },

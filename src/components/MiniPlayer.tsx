@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { buttonClass, CoverArt, Icon, PlayButton, cn } from "@/kit";
+import { buttonClass, CoverArt, Icon, PlayButton, Truncate, cn } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { useAudioPlayback } from "./AudioPlaybackProvider";
 
@@ -23,13 +23,14 @@ export function MiniPlayer() {
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
         <PlayButton
           playing={playing}
+          size="sm"
           onClick={() => (playing ? pause() : play(nowPlaying))}
           label={playing ? t("common.pause") : t("common.play")}
         />
         <CoverArt src={nowPlaying.coverUrl || "/covers/beat1.svg"} className="h-10 w-10 rounded-lg" />
         <Link href={nowPlaying.href} className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{nowPlaying.title}</p>
-          <p className="truncate text-xs text-muted">{nowPlaying.producer}</p>
+          <Truncate as="p" className="text-sm font-medium">{nowPlaying.title}</Truncate>
+          <Truncate as="p" className="text-xs text-muted">{nowPlaying.producer}</Truncate>
         </Link>
         <Link href={nowPlaying.href} className={buttonClass({ size: "sm" })}>
           <Icon name="cart" size="sm" />

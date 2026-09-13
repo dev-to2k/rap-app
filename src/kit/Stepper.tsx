@@ -3,19 +3,22 @@ import { cn } from "./cn";
 export function Stepper({
   steps,
   current,
+  labels,
 }: {
-  steps: number;
+  steps?: number;
   current: number;
+  labels?: string[];
 }) {
+  const items = labels?.length ? labels : Array.from({ length: steps || 0 }, (_, i) => String(i + 1));
   return (
-    <div className="flex gap-2">
-      {Array.from({ length: steps }, (_, i) => {
+    <ol className="flex flex-wrap gap-2">
+      {items.map((label, i) => {
         const n = i + 1;
         return (
-          <span
-            key={n}
+          <li
+            key={label}
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium",
+              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium",
               n === current
                 ? "bg-accent text-accent-fg"
                 : n < current
@@ -23,10 +26,11 @@ export function Stepper({
                   : "bg-surface-2 text-muted",
             )}
           >
-            {n}
-          </span>
+            <span className="tabular-nums">{n}</span>
+            {labels ? <span>{label}</span> : null}
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
