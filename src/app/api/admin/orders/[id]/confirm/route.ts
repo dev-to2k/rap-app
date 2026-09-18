@@ -25,8 +25,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return NextResponse.json({ error: "ORDER_NOT_FOUND" }, { status: 404 });
 
-  // Idempotent: already paid/unlocked
-  if (order.status === "unlocked" || order.status === "paid") {
+  // Fully unlocked → idempotent OK
+  if (order.status === "unlocked") {
     const full = await prisma.order.findUnique({
       where: { id: order.id },
       include: { license: true },
@@ -34,7 +34,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ ok: true, idempotent: true, order: full });
   }
 
-  if (order.status !== "pending_confirm" && order.status !== "pending_ck" && order.status !== "awaiting_payment" && order.status !== "pending") {
+  // paid-without-unlock falls through to confirmPaymentAndUnlock (heal)
+  if (
+    order.status !== "pending_confirm" &&
+    order.status !== "pending_ck" &&
+    order.status !== "awaiting_payment" &&
+    order.status !== "pending" &&
+    order.status !== "paid"
+  ) {
     return NextResponse.json(
       { error: `Order status is ${order.status}`, code: "INVALID_STATUS" },
       { status: 400 },

@@ -1,7 +1,6 @@
 import { prisma } from "./prisma";
 import { generateLicensePdf } from "./pdf";
 import { unlockedLedgerUpdate } from "./ledger";
-import path from "path";
 
 /**
  * Idempotent unlock after verified webhook:
@@ -76,10 +75,9 @@ export async function unlockOrder(orderId: string) {
       orderId: order.id,
     });
 
-    const rel = path.relative(process.cwd(), pdfPath);
     const updatedLicense = await tx.license.update({
       where: { id: license.id },
-      data: { pdfPath: rel },
+      data: { pdfPath },
     });
 
     const unlockedAt = new Date();

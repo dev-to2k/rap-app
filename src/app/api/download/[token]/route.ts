@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyDownloadToken } from "@/lib/signed-url";
 import { prisma } from "@/lib/prisma";
+import { generateLicensePdf, resolveLicensePdfPath } from "@/lib/pdf";
 import fs from "fs";
 import path from "path";
 
@@ -29,6 +30,33 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     fileRel = license.pdfPath;
     contentType = "application/pdf";
     filename = `license-${license.id}.pdf`;
+    if (fileRel) {
+      let absPdf = resolveLicensePdfPath(fileRel, license.id);
+      if (!fs.existsSync(absPdf)) {
+        // Ephemeral /tmp may be gone on a new serverless instance — regenerate
+        const beat = await prisma.beat.findUnique({
+          where: { id: license.beatId },
+          include: { producer: true },
+        });
+        const buyer = license.buyer;
+        if (beat && buyer) {
+          const marker = await generateLicensePdf({
+            licenseId: license.id,
+            buyerName: buyer.name,
+            buyerEmail: buyer.email,
+            producerName: beat.producer.name,
+            beatTitle: beat.title,
+            sku: license.sku,
+            amountVnd: license.order.amountVnd,
+            sampleFlag: beat.sampleFlag,
+            orderId: license.orderId,
+          });
+          await prisma.license.update({ where: { id: license.id }, data: { pdfPath: marker } });
+          fileRel = marker;
+          absPdf = resolveLicensePdfPath(marker, license.id);
+        }
+      }
+    }
   } else if (parsed.fileKind === "mp3") {
     fileRel = beat.audioUrl;
     contentType = "audio/mpeg";
@@ -50,7 +78,12 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
   }
 
   if (!fileRel) return NextResponse.json({ error: "File missing" }, { status: 404 });
-  const abs = path.isAbsolute(fileRel) ? fileRel : path.join(process.cwd(), fileRel);
+  const abs =
+    parsed.fileKind === "pdf"
+      ? resolveLicensePdfPath(fileRel, license.id)
+      : path.isAbsolute(fileRel)
+        ? fileRel
+        : path.join(process.cwd(), fileRel);
   if (!fs.existsSync(abs)) return NextResponse.json({ error: "File not on disk" }, { status: 404 });
 
   const data = fs.readFileSync(abs);

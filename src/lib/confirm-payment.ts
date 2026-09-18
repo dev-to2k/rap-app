@@ -37,7 +37,20 @@ export async function confirmPaymentAndUnlock(opts: {
     where: { webhookIdempotencyKey: opts.idempotencyKey },
     include: { license: true },
   });
-  if (existing) return { kind: "idempotent", order: existing };
+  if (existing) {
+    // Heal: paid but unlock/PDF failed on prior attempt (Vercel read-only FS, etc.)
+    if (existing.status === "paid" && (!existing.license || !existing.unlockedAt)) {
+      try {
+        const result = await unlockOrder(existing.id);
+        return { kind: "ok", order: result.order, license: result.license, already: result.already };
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("confirmPaymentAndUnlock heal error", msg);
+        return { kind: "error", status: 500, error: msg };
+      }
+    }
+    return { kind: "idempotent", order: existing };
+  }
 
   const order = await prisma.order.findUnique({ where: { id: opts.orderId } });
   if (!order) return { kind: "error", status: 404, error: "ORDER_NOT_FOUND" };
@@ -45,6 +58,23 @@ export async function confirmPaymentAndUnlock(opts: {
     return { kind: "error", status: 400, error: "AMOUNT_MISMATCH" };
   }
   if (order.status === "unlocked") return { kind: "idempotent", order };
+  if (order.status === "paid") {
+    try {
+      // Ensure idempotency key is set, then unlock
+      if (!order.webhookIdempotencyKey) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { webhookIdempotencyKey: opts.idempotencyKey },
+        });
+      }
+      const result = await unlockOrder(order.id);
+      return { kind: "ok", order: result.order, license: result.license, already: result.already };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("confirmPaymentAndUnlock paid-heal error", msg);
+      return { kind: "error", status: 500, error: msg };
+    }
+  }
   if (order.status === "failed") {
     return { kind: "error", status: 409, error: "ORDER_FROZEN", code: "ORDER_FROZEN" };
   }
