@@ -31,11 +31,27 @@ export async function GET(_req: NextRequest, { params }: { params: { orderId: st
     return NextResponse.json({ error: gate.error, status: order.status }, { status: gate.status });
   }
 
+  // Buyer-facing order only — no internal ledger (take/fund/payable/credited)
+  const orderPublic = {
+    id: order.id,
+    status: order.status,
+    sku: order.sku,
+    amountVnd: order.amountVnd,
+    beatId: order.beatId,
+    paidAt: order.paidAt,
+    unlockedAt: order.unlockedAt,
+  };
+
   try {
     const downloads = await mintDownloadLinks(license);
     return NextResponse.json({
-      order,
-      license: order.license,
+      order: orderPublic,
+      license: {
+        id: order.license.id,
+        orderId: order.license.orderId,
+        sku: order.license.sku,
+        createdAt: order.license.createdAt,
+      },
       downloads,
       ttlSeconds: DOWNLOAD_TTL_SECONDS,
       expiresAt: downloads.length ? Math.min(...downloads.map((d) => d.expiresAt)) : null,
