@@ -5,12 +5,12 @@ export function StickyBar({ className, children, ...props }: HTMLAttributes<HTML
   return (
     <div
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 p-4 backdrop-blur",
+        "fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur",
         className,
       )}
       {...props}
     >
-      <div className="mx-auto max-w-5xl">{children}</div>
+      <div className="mx-auto w-full max-w-content">{children}</div>
     </div>
   );
 }

@@ -27,7 +27,8 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   const soldExclusive = beat.status === "sold_exclusive";
   const price =
     sku === "lease" ? beat.priceLease : sku === "wav" ? beat.priceWav : beat.priceExclusive;
-  const buyDisabled = loading || beat.status !== "available" || (sku === "exclusive" && exclusiveDisabled);
+  const buyDisabled =
+    loading || beat.status !== "available" || (sku === "exclusive" && exclusiveDisabled);
 
   async function checkout() {
     setError("");
@@ -76,21 +77,23 @@ export function BuyPanel({ beat }: { beat: Beat }) {
     return <Alert variant="info">{t("buy.soldExclusive")}</Alert>;
   }
 
-  const ctaLabel = loading ? (
+  const ctaInner = loading ? (
     <span className="inline-flex items-center gap-2">
       <Spinner /> {t("buy.creating")}
     </span>
   ) : (
     <>
-      <Icon name="flame" size="sm" />
-      {t("buy.cta", { sku: t(`sku.${sku}`), price: formatVnd(price) })}
+      <Icon name="wallet" size="sm" />
+      {t("buy.ctaMomo")}
     </>
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24 md:pb-0">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">{t("buy.chooseLicense")}</h3>
+        <h3 className="font-display text-[13px] font-semibold uppercase tracking-wide text-muted">
+          {t("buy.chooseLicense")}
+        </h3>
         <p className="mt-1 text-xs text-muted">{t("buy.chooseHint")}</p>
       </div>
       <SkuSelector
@@ -107,18 +110,32 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         <Alert variant="warning">{t("buy.unclearedAlert")}</Alert>
       ) : null}
       {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <div className="hidden md:block">
-        <Button className="w-full" disabled={buyDisabled} onClick={() => void checkout()}>
-          {ctaLabel}
-        </Button>
-        <p className="mt-2 text-center">
+
+      <div className="hidden space-y-3 md:block">
+        <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
+          <span className="text-sm text-muted">{t("buy.subtotal")}</span>
           <Price amount={price} className="text-lg" />
-        </p>
-      </div>
-      <StickyBar className="md:hidden">
-        <Button className="w-full" disabled={buyDisabled} onClick={() => void checkout()}>
-          {ctaLabel}
+        </div>
+        <Button className="tap-target w-full rounded-full" disabled={buyDisabled} onClick={() => void checkout()}>
+          {ctaInner}
         </Button>
+        <p className="text-center text-xs text-muted">{t("buy.ctaHint", { price: formatVnd(price) })}</p>
+      </div>
+
+      <StickyBar className="md:hidden">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] text-muted">{t("buy.subtotal")}</p>
+            <Price amount={price} className="text-base" />
+          </div>
+          <Button
+            className="tap-target shrink-0 rounded-full px-4"
+            disabled={buyDisabled}
+            onClick={() => void checkout()}
+          >
+            {ctaInner}
+          </Button>
+        </div>
       </StickyBar>
     </div>
   );

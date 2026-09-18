@@ -51,78 +51,79 @@ export function MarketplaceHome({
   const keys = Array.from(new Set(beats.map((b) => b.musicalKey)));
 
   return (
-    <Container className="py-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold tracking-tight">{t("home.catalogTitle")}</h1>
-        <div className="flex gap-2 text-sm">
-          {(["new", "plays", "price"] as const).map((s) => (
-            <Chip key={s} selected={sort === s} onClick={() => setSort(s)}>
-              {s === "new" ? t("home.sortNew") : s === "plays" ? t("home.sortPlays") : t("home.sortPrice")}
+    <Container className="content-max py-5">
+      <header className="mb-5 space-y-2 fade-in">
+        <p className="text-[13px] font-medium uppercase tracking-wider text-accent">{t("home.heroEyebrow")}</p>
+        <h1 className="font-display text-[28px] font-extrabold leading-[34px] tracking-tight">
+          {t("home.heroTitle")}
+        </h1>
+        <p className="text-[15px] leading-[22px] text-muted">{t("home.heroBody")}</p>
+      </header>
+
+      <div className="sticky top-14 z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-[22px] font-bold leading-7">{t("home.catalogTitle")}</h2>
+          <div className="flex gap-2 text-sm">
+            {(["new", "plays", "price"] as const).map((s) => (
+              <Chip key={s} selected={sort === s} onClick={() => setSort(s)} className="tap-target">
+                {s === "new" ? t("home.sortNew") : s === "plays" ? t("home.sortPlays") : t("home.sortPrice")}
+              </Chip>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <Chip selected={tag === "all"} onClick={() => setTag("all")} className="tap-target shrink-0">
+            {t("home.filterAll")}
+          </Chip>
+          {BEAT_TAGS.map((key) => (
+            <Chip key={key} selected={tag === key} onClick={() => setTag(key)} className="tap-target shrink-0">
+              {t(`home.tag${key[0].toUpperCase()}${key.slice(1)}`)}
             </Chip>
           ))}
         </div>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden lg:block">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">{t("home.filters")}</p>
-          <div className="flex flex-col gap-2">
-            <Chip selected={tag === "all"} onClick={() => setTag("all")}>
-              {t("home.filterAll")}
-            </Chip>
-            {BEAT_TAGS.map((key) => (
-              <Chip key={key} selected={tag === key} onClick={() => setTag(key)}>
-                {t(`home.tag${key[0].toUpperCase()}${key.slice(1)}`)}
-              </Chip>
-            ))}
-          </div>
-          <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wider text-muted">{t("home.key")}</p>
-          <p className="text-sm text-muted">{keys.join(" · ") || "—"}</p>
-          <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wider text-muted">{t("home.bpm")}</p>
-          <p className="text-sm text-muted">
+
+      <details className="mb-4 rounded-md border border-border bg-surface p-3 text-sm">
+        <summary className="tap-target cursor-pointer list-none font-medium text-muted">{t("home.filters")}</summary>
+        <div className="mt-3 space-y-3">
+          <p className="text-xs text-muted">
+            {t("home.key")}: {keys.join(" · ") || "—"}
+          </p>
+          <p className="text-xs text-muted">
+            {t("home.bpm")}:{" "}
             {beats.length ? `${Math.min(...beats.map((b) => b.bpm))}–${Math.max(...beats.map((b) => b.bpm))}` : "—"}
           </p>
           <Checkbox
-            className="mt-6 text-muted"
+            className="text-muted"
             name="exclusiveOpen"
             checked={exclusiveOnly}
             onChange={(e) => setExclusiveOnly(e.target.checked)}
           >
             {t("home.exclusiveOpen")}
           </Checkbox>
-        </aside>
-        <div>
-          <div className="mb-4 flex gap-2 overflow-x-auto lg:hidden">
-            <Chip selected={tag === "all"} onClick={() => setTag("all")}>
-              {t("home.filterAll")}
-            </Chip>
-            {BEAT_TAGS.map((key) => (
-              <Chip key={key} selected={tag === key} onClick={() => setTag(key)} className="shrink-0">
-                {t(`home.tag${key[0].toUpperCase()}${key.slice(1)}`)}
-              </Chip>
-            ))}
-          </div>
-          {filtered.length === 0 ? (
-            <EmptyState icon="music" title={t("home.emptyTitle")} description={t("home.emptyDescription")} />
-          ) : (
-            <ul className="grid gap-3">
-              {filtered.map((b) => (
-                <BeatCard
-                  key={b.id}
-                  id={b.id}
-                  title={b.title}
-                  coverUrl={b.coverUrl}
-                  producer={b.producer.name}
-                  bpm={b.bpm}
-                  musicalKey={b.musicalKey}
-                  price={b.priceLease}
-                  audioUrl={b.audioUrl}
-                  sampleFlag={b.sampleFlag}
-                />
-              ))}
-            </ul>
-          )}
         </div>
-      </div>
+      </details>
+
+      {filtered.length === 0 ? (
+        <EmptyState icon="music" title={t("home.emptyTitle")} description={t("home.emptyDescription")} />
+      ) : (
+        <ul className="grid grid-cols-2 gap-3">
+          {filtered.map((b) => (
+            <BeatCard
+              key={b.id}
+              id={b.id}
+              title={b.title}
+              coverUrl={b.coverUrl}
+              producer={b.producer.name}
+              bpm={b.bpm}
+              musicalKey={b.musicalKey}
+              price={b.priceLease}
+              audioUrl={b.audioUrl}
+              sampleFlag={b.sampleFlag}
+            />
+          ))}
+        </ul>
+      )}
     </Container>
   );
 }

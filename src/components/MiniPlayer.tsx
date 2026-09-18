@@ -20,14 +20,14 @@ export function MiniPlayer() {
         !studio && "bottom-14 lg:bottom-0",
       )}
     >
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
+      <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-2">
         <PlayButton
           playing={playing}
           size="sm"
           onClick={() => (playing ? pause() : play(nowPlaying))}
           label={playing ? t("common.pause") : t("common.play")}
         />
-        <CoverArt src={nowPlaying.coverUrl || "/covers/beat1.svg"} className="h-10 w-10 rounded-lg" />
+        <CoverArt src={nowPlaying.coverUrl || "/covers/beat1.svg"} className="h-10 w-10 rounded-md" />
         <Link href={nowPlaying.href} className="min-w-0 flex-1">
           <Truncate as="p" className="text-sm font-medium">{nowPlaying.title}</Truncate>
           <Truncate as="p" className="text-xs text-muted">{nowPlaying.producer}</Truncate>

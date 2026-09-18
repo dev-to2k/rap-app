@@ -3,19 +3,29 @@
 @tailwind utilities;
 
 :root {
-  --background: 11 11 12;
-  --surface: 22 22 24;
+  /* SPEC v2 Night Studio — RGB channels for Tailwind alpha */
+  --background: 10 10 11; /* #0A0A0B void */
+  --surface: 20 20 22; /* #141416 elevated */
   --surface-2: 30 30 34;
-  --border: 39 39 42;
-  --foreground: 250 250 250;
-  --muted: 161 161 170;
-  --accent: 163 230 53;
-  --accent-fg: 11 11 12;
+  --border: 42 42 46; /* #2A2A2E */
+  --foreground: 245 245 244; /* #F5F5F4 ink */
+  --muted: 161 161 170; /* #A1A1AA */
+  --accent: 200 255 61; /* #C8FF3D ONLY */
+  --accent-fg: 10 10 11; /* accent-ink on accent */
   --exclusive: 232 212 139;
-  --warning: 251 191 36;
-  --danger: 248 113 113;
-  /* Design hook: swap to VN display font when Design delivers */
-  --font-ui: var(--font-geist-sans);
+  --warning: 251 191 36; /* #FBBF24 */
+  --danger: 248 113 113; /* #F87171 */
+
+  --font-display: var(--font-be-vietnam-pro), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-ui: var(--font-sans);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+  --content-max: 480px;
+  --fade: 180ms;
 }
 
 html {
@@ -25,8 +35,38 @@ html {
 body {
   color: rgb(var(--foreground));
   background: rgb(var(--background));
-  font-family: var(--font-ui), var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 22px;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+.h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.02em;
+}
+
+h2,
+.h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+h3,
+.h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
 }
 
 input:-webkit-autofill,
@@ -42,5 +82,46 @@ textarea:-webkit-autofill {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .fade-in {
+    animation: fade-in var(--fade) ease-out both;
+  }
+
+  .transition-fade {
+    transition-property: opacity, background-color, border-color, color, box-shadow, transform;
+    transition-duration: var(--fade);
+    transition-timing-function: ease-out;
+  }
+
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .content-max {
+    max-width: var(--content-max);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+  }
+  .transition-fade {
+    transition: none;
   }
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Card, CoverArt, Icon, PlayButton, Price, Truncate, Waveform } from "@/kit";
+import { Badge, Card, CoverArt, PlayButton, Price, Truncate } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
-import { mockPlays, tagForTitle } from "@/lib/beat-tags";
+import { tagForTitle } from "@/lib/beat-tags";
 import { useAudioPlayback } from "./AudioPlaybackProvider";
 
 type Props = {
@@ -18,6 +18,7 @@ type Props = {
   sampleFlag: string;
 };
 
+/** Cover-first catalog card. */
 export function BeatCard(props: Props) {
   const audioSrc = props.audioUrl
     ? `/api/preview?path=${encodeURIComponent(props.audioUrl)}`
@@ -29,14 +30,15 @@ export function BeatCard(props: Props) {
   const tagLabel = t(`home.tag${tag[0].toUpperCase()}${tag.slice(1)}`);
 
   return (
-    <li>
-      <Card className="flex items-center gap-4 p-3 transition hover:border-accent/40">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
-          <CoverArt src={props.coverUrl || "/covers/beat1.svg"} className="h-full w-full" />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+    <li className="fade-in">
+      <Card className="overflow-hidden p-0 transition-fade hover:border-accent/40">
+        <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-surface-2">
+          <CoverArt src={props.coverUrl || "/covers/beat1.svg"} alt="" className="h-full w-full" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
             <PlayButton
               playing={isThis}
-              size="sm"
+              size="md"
+              className="tap-target"
               onClick={() =>
                 toggle({
                   id: props.id,
@@ -50,26 +52,33 @@ export function BeatCard(props: Props) {
               label={isThis ? t("common.pause") : t("common.play")}
             />
           </div>
+          {props.sampleFlag === "uncleared" ? (
+            <Badge variant="warning" className="absolute left-2 top-2">
+              uncleared
+            </Badge>
+          ) : (
+            <Badge variant="accent" className="absolute left-2 top-2">
+              {t("common.lease")}
+            </Badge>
+          )}
         </div>
-        <Link href={`/beats/${props.id}`} className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Truncate className="font-medium text-foreground">{props.title}</Truncate>
-            <Badge variant="default">{tagLabel}</Badge>
-            {props.sampleFlag === "uncleared" ? <Badge variant="warning">uncleared</Badge> : null}
+        <Link href={`/beats/${props.id}`} className="block space-y-1.5 p-3">
+          <div className="flex items-start justify-between gap-2">
+            <Truncate className="font-display text-lg font-semibold leading-6 text-foreground">
+              {props.title}
+            </Truncate>
+            <Badge variant="default" className="shrink-0 capitalize">
+              {tagLabel}
+            </Badge>
           </div>
-          <Truncate as="div" className="mt-1 text-xs text-muted">
+          <Truncate as="div" className="text-xs leading-4 text-muted">
             {props.producer} · {props.bpm} BPM · {props.musicalKey}
           </Truncate>
-          <Waveform active={isThis} className="mt-2" />
+          <div className="flex items-end justify-between pt-1">
+            <span className="text-[12px] leading-4 text-muted">{t("common.from")}</span>
+            <Price amount={props.price} className="text-[16px] font-medium leading-5" />
+          </div>
         </Link>
-        <div className="hidden shrink-0 text-xs text-muted sm:block">{t("home.plays", { n: mockPlays(props.id) })}</div>
-        <button type="button" className="hidden text-muted hover:text-accent sm:block" aria-label="like">
-          <Icon name="heart" size="sm" />
-        </button>
-        <div className="shrink-0 text-right">
-          <Price amount={props.price} className="text-sm" />
-          <div className="text-[10px] text-muted">{t("common.lease")}</div>
-        </div>
       </Card>
     </li>
   );

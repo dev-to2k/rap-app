@@ -34,7 +34,7 @@ export function BeatPlayer({
   }
 
   return (
-    <div className="relative mb-5 aspect-square w-full max-w-md overflow-hidden rounded-2xl bg-surface-2">
+    <div className="relative mb-5 aspect-square w-full w-full overflow-hidden rounded-lg bg-surface-2">
       <CoverArt src={coverUrl || "/covers/beat1.svg"} className="h-full w-full" />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent p-4 pt-20">
         <div className="flex items-center gap-3">
@@ -42,6 +42,7 @@ export function BeatPlayer({
             playing={isThis}
             onClick={onPlay}
             size="lg"
+            className="tap-target"
             label={isThis ? t("common.pause") : t("common.play")}
           />
           <Waveform active={isThis} className="h-8 flex-1" />

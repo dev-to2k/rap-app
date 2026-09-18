@@ -27,7 +27,7 @@ export function SkuSelector({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="grid grid-cols-1 gap-2">
       {SKUS.map((s) => {
         const disabled = s === "exclusive" && exclusiveDisabled;
         return (
@@ -37,13 +37,15 @@ export function SkuSelector({
             disabled={disabled}
             onClick={() => onChange(s)}
             className={cn(
-              "w-full rounded-2xl border p-4 text-left transition",
+              "tap-target w-full rounded-lg border p-4 text-left transition-fade",
               sku === s ? "border-accent bg-accent/10" : "border-border bg-surface",
               disabled && "cursor-not-allowed opacity-40",
             )}
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="font-medium text-foreground">{t(`sku.${s}`)}</span>
+              <span className="font-display text-[15px] font-semibold text-foreground">
+                {t(`sku.${s}`)}
+              </span>
               <Price amount={prices[s]} className={s === "exclusive" ? "text-exclusive" : undefined} />
             </div>
             {s === "exclusive" && sampleFlag === "uncleared" ? (

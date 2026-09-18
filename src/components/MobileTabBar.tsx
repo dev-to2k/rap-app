@@ -28,7 +28,7 @@ export function MobileTabBar({ isProducer }: { isProducer: boolean }) {
               <Link
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-2 text-[10px]",
+                  "tap-target flex flex-col items-center gap-0.5 py-2 text-[10px]",
                   active ? "text-accent" : "text-muted",
                 )}
               >

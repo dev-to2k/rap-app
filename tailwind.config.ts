@@ -23,13 +23,30 @@ const config: Config = {
         danger: "rgb(var(--danger) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["var(--font-ui)", "var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-inter)", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-be-vietnam-pro)", "system-ui", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       borderRadius: {
         sm: "8px",
         md: "12px",
         lg: "16px",
+        pill: "999px",
+      },
+      maxWidth: {
+        content: "480px",
+      },
+      transitionDuration: {
+        fade: "180ms",
+      },
+      transitionTimingFunction: {
+        soft: "ease-out",
+      },
+      minHeight: {
+        tap: "44px",
+      },
+      minWidth: {
+        tap: "44px",
       },
     },
   },
