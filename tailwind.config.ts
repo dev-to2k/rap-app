@@ -22,6 +22,10 @@ const config: Config = {
         warning: "rgb(var(--warning) / <alpha-value>)",
         danger: "rgb(var(--danger) / <alpha-value>)",
       },
+      fontFamily: {
+        sans: ["var(--font-ui)", "var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+      },
       borderRadius: {
         sm: "8px",
         md: "12px",
