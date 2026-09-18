@@ -15,9 +15,9 @@ export function MarketTopBar({ user }: { user: User }) {
   const [q, setQ] = useState("");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
-        <Link href="/" className="inline-flex shrink-0 items-center gap-1.5 text-lg font-bold tracking-tight text-accent">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
+      <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-2.5">
+        <Link href="/" className="inline-flex shrink-0 items-center gap-1.5 font-display text-lg font-bold tracking-tight text-accent">
           <Icon name="flame" size="md" />
           Rap App
         </Link>

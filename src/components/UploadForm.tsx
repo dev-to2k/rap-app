@@ -26,7 +26,7 @@ function FileDrop({
 }) {
   const t = useT();
   return (
-    <label className="flex min-h-[8.5rem] cursor-pointer flex-col rounded-2xl border border-dashed border-white/15 bg-surface-2/50 p-4 transition hover:border-accent/50">
+    <label className="flex min-h-[8.5rem] cursor-pointer flex-col rounded-lg border border-dashed border-white/15 bg-surface-2/50 p-4 transition hover:border-accent/50">
       <span className="text-sm font-medium">{label}</span>
       <span className="mt-0.5 text-xs text-muted">{hint}</span>
       <span className="mt-auto pt-3 text-xs text-accent">
@@ -231,7 +231,7 @@ export function UploadForm() {
                 key={f}
                 type="button"
                 onClick={() => setMeta({ ...meta, sampleFlag: f })}
-                className={`rounded-xl border p-3 text-left text-sm ${
+                className={`rounded-md border p-3 text-left text-sm ${
                   meta.sampleFlag === f ? "border-accent bg-accent/10" : "border-border"
                 }`}
               >
@@ -287,7 +287,7 @@ export function UploadForm() {
         {error ? <p className="text-sm text-danger">{error}</p> : null}
       </section>
 
-      <div className="sticky bottom-4 z-20 flex flex-wrap justify-end gap-2 rounded-2xl border border-border bg-background/95 p-3 backdrop-blur">
+      <div className="sticky bottom-4 z-20 flex flex-wrap justify-end gap-2 rounded-lg border border-border bg-background/95 p-3 backdrop-blur">
         <Button variant="ghost" onClick={() => router.push("/studio/catalog")}>
           {t("upload.cancel")}
         </Button>

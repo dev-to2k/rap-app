@@ -1,6 +1,7 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
   AlertTriangle,
+  ArrowLeft,
   AudioLines,
   BarChart3,
   Disc3,
@@ -33,6 +34,7 @@ import { cn } from "./cn";
 
 export const icons = {
   alert: AlertTriangle,
+  back: ArrowLeft,
   waveform: AudioLines,
   chart: BarChart3,
   disc: Disc3,

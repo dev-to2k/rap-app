@@ -11,7 +11,7 @@ export function Chip({
     <button
       type={type}
       className={cn(
-        "rounded-xl border px-3 py-2 text-sm capitalize transition",
+        "tap-target rounded-md border px-3 py-2 text-sm capitalize transition-fade",
         selected ? "border-accent bg-accent/10 text-foreground" : "border-border bg-surface text-muted",
         className,
       )}
