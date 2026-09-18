@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Prisma generate / Next build need a URL shape; no live DB in CI
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+      SESSION_SECRET: ci-session-secret-change-me-min-32chars
+      DOWNLOAD_HMAC_SECRET: ci-download-hmac-secret-min-32chars!!
+      WEBHOOK_SECRET: ci-webhook-secret-min-32-characters!!!!
+      CRON_SECRET: ci-cron-secret
+      ALLOW_PAYMENT_MOCKS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Build
+        run: bun run build
