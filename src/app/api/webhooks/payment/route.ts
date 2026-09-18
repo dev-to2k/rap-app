@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getWebhookSecret, verifyWebhookSignature } from "@/lib/webhook";
-import { unlockOrder } from "@/lib/unlock";
-import { releaseExclusiveReserve } from "@/lib/orders";
 import { allowPaymentMocks, isProductionRuntime } from "@/lib/security";
 import { isMomoIpnPayload, verifyMomoIpn } from "@/lib/momo";
-import { ledgerAmountsForOrder } from "@/lib/ledger";
+import { confirmPaymentAndUnlock } from "@/lib/confirm-payment";
 
 export const dynamic = "force-dynamic";
 
@@ -19,78 +16,6 @@ function coerceAmount(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string" && v.trim() && Number.isFinite(Number(v))) return Number(v);
   return null;
-}
-
-async function freezeOrderConflict(orderId: string, beatId: string, sku: string, idempotencyKey: string) {
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: "failed",
-      payableAt: null,
-      webhookIdempotencyKey: idempotencyKey,
-    },
-  });
-  if (sku === "exclusive") await releaseExclusiveReserve(beatId);
-}
-
-async function unlockFromVerifiedPayment(opts: {
-  orderId: string;
-  amountVnd: number;
-  idempotencyKey: string;
-  paymentRef?: string;
-  momoFeeVnd?: number;
-}) {
-  const existing = await prisma.order.findFirst({
-    where: { webhookIdempotencyKey: opts.idempotencyKey },
-    include: { license: true },
-  });
-  if (existing) return { kind: "idempotent" as const, order: existing };
-
-  const order = await prisma.order.findUnique({ where: { id: opts.orderId } });
-  if (!order) return { kind: "error" as const, status: 404, error: "ORDER_NOT_FOUND" };
-  if (opts.amountVnd !== order.amountVnd) {
-    return { kind: "error" as const, status: 400, error: "AMOUNT_MISMATCH" };
-  }
-  if (order.status === "unlocked") return { kind: "idempotent" as const, order };
-  if (order.status === "failed") {
-    return { kind: "error" as const, status: 409, error: "ORDER_FROZEN", code: "ORDER_FROZEN" };
-  }
-
-  try {
-    const paidAt = new Date();
-    // Money snapshot at pay; payableAt is set only after successful unlock (unlockedAt + 5d)
-    const amounts = ledgerAmountsForOrder(order, opts.momoFeeVnd);
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: "paid",
-        paidAt,
-        ...amounts,
-        payableAt: null,
-        paymentRef: opts.paymentRef || order.paymentRef,
-        webhookIdempotencyKey: opts.idempotencyKey,
-      },
-    });
-    const result = await unlockOrder(order.id);
-    return { kind: "ok" as const, order: result.order, license: result.license, already: result.already };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    if (
-      msg === "EXCLUSIVE_CONFLICT" ||
-      msg === "EXCLUSIVE_UNAVAILABLE" ||
-      msg === "EXCLUSIVE_FORBIDDEN_UNCLEARED"
-    ) {
-      await freezeOrderConflict(order.id, order.beatId, order.sku, opts.idempotencyKey);
-      return {
-        kind: "error" as const,
-        status: 409,
-        error: msg === "EXCLUSIVE_FORBIDDEN_UNCLEARED" ? msg : "EXCLUSIVE_CONFLICT",
-        code: msg === "EXCLUSIVE_FORBIDDEN_UNCLEARED" ? msg : "EXCLUSIVE_CONFLICT",
-      };
-    }
-    console.error("webhook unlock error", msg);
-    return { kind: "error" as const, status: 500, error: msg };
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -120,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (!orderId || amountVnd === null || !idempotencyKey) {
       return NextResponse.json({ error: "Invalid MoMo IPN payload" }, { status: 400 });
     }
-    const out = await unlockFromVerifiedPayment({
+    const out = await confirmPaymentAndUnlock({
       orderId,
       amountVnd,
       idempotencyKey,
@@ -133,7 +58,6 @@ export async function POST(req: NextRequest) {
         { status: out.status }
       );
     }
-    // MoMo expects 204
     return new NextResponse(null, { status: 204 });
   }
 
@@ -164,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
   }
 
-  const out = await unlockFromVerifiedPayment({
+  const out = await confirmPaymentAndUnlock({
     orderId,
     amountVnd,
     idempotencyKey,

@@ -52,6 +52,10 @@ export async function createMarketplaceOrder(input: {
 
     const ledger = computeOrderLedger({ gmvVnd: amountVnd, takeRateBps, momoFeeVnd: 0 });
 
+    const method = input.paymentMethod || "momo";
+    const awaiting =
+      method === "momo" || method === "ck" ? "pending_ck" : "awaiting_payment";
+
     return tx.order.create({
       data: {
         buyerId: input.buyerId,
@@ -60,8 +64,8 @@ export async function createMarketplaceOrder(input: {
         amountVnd,
         takeRateBps,
         ...ledger,
-        status: "pending",
-        paymentMethod: input.paymentMethod,
+        status: awaiting,
+        paymentMethod: method,
       },
     });
   });

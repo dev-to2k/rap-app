@@ -14,11 +14,13 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
 }
 
+export type UserRole = "buyer" | "producer" | "admin";
+
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: "buyer" | "producer";
+  role: UserRole;
 };
 
 export async function hashPassword(password: string) {
@@ -75,7 +77,7 @@ export async function getSession(): Promise<SessionUser | null> {
   return parseSessionToken(token);
 }
 
-export async function requireUser(roles?: Array<"buyer" | "producer">) {
+export async function requireUser(roles?: UserRole[]) {
   const user = await getSession();
   if (!user) return null;
   if (roles && !roles.includes(user.role)) return null;
