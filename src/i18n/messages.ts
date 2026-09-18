@@ -274,7 +274,7 @@ export const vi = {
     doneBody: "Cảm ơn bạn — mình sẽ liên hệ qua email khi mở thêm chỗ.",
     backHome: "← Về chợ beat",
     privacy:
-      "Rap App chỉ thu email, Instagram/biệt danh, vai trò (nhà sản xuất/rapper), đường dẫn catalog (tuỳ chọn) và mã nguồn mời để truy cập sớm và đo kênh. Không lấy mật khẩu, số điện thoại hay thẻ. Không bán dữ liệu. Muốn xóa khỏi danh sách chờ: liên hệ hỗ trợ kèm email đã đăng ký.",
+      "Rap App chỉ thu email, IG/handle, vai trò (producer/rapper), link catalog (tuỳ chọn) và mã nguồn invite (src/utm) để early access và đo kênh. Không lấy mật khẩu, SĐT hay thẻ. Không bán dữ liệu. Muốn xóa khỏi waitlist: liên hệ Support kèm email đã đăng ký.",
   },
   support: {
     title: "Hỗ trợ",
@@ -585,7 +585,7 @@ export const en: Messages = {
     doneBody: "Thanks — we'll email you when more slots open.",
     backHome: "← Back to the store",
     privacy:
-      "Rap App only collects email, Instagram/handle, role (producer/rapper), optional catalog URL, and invite codes to measure channels and grant early slots. No passwords, phone numbers, or cards. We don't sell data. To leave the waitlist: contact support with your signup email.",
+      "Rap App only collects email, IG/handle, role (producer/rapper), optional catalog URL, and invite source codes (src/utm) for early access and channel measurement. No passwords, phone numbers, or cards. We don't sell data. To leave the waitlist: contact Support with your signup email.",
   },
   support: {
     title: "Support",

@@ -56,7 +56,10 @@ function WaitlistForm() {
         <Link href="/" className="inline-block text-sm text-accent hover:underline">
           {t("waitlist.backHome")}
         </Link>
-        <p className="pt-4 text-left text-[11px] leading-relaxed text-muted">{t("waitlist.privacy")}</p>
+        <footer className="mt-4 rounded-xl border border-border bg-surface-2 p-3 text-left">
+          <p className="text-xs font-semibold text-foreground">Privacy</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">{t("waitlist.privacy")}</p>
+        </footer>
       </div>
     );
   }
@@ -104,7 +107,10 @@ function WaitlistForm() {
         </Button>
       </form>
 
-      <p className="text-[11px] leading-relaxed text-muted">{t("waitlist.privacy")}</p>
+      <footer className="rounded-xl border border-border bg-surface-2 p-3">
+        <p className="text-xs font-semibold text-foreground">Privacy</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted">{t("waitlist.privacy")}</p>
+      </footer>
     </div>
   );
 }
