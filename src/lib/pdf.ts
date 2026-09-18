@@ -1,6 +1,7 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { SKU_LABELS, formatVnd } from "./config";
 
@@ -43,7 +44,8 @@ export async function generateLicensePdf(opts: {
   territory?: string;
   term?: string;
 }): Promise<string> {
-  const dir = path.join(process.cwd(), "storage", "licenses");
+  // Vercel serverless FS is read-only except /tmp
+  const dir = path.join(os.tmpdir(), "rap-app", "licenses");
   fs.mkdirSync(dir, { recursive: true });
   const pdfPath = path.join(dir, `${opts.licenseId}.pdf`);
 
@@ -126,5 +128,17 @@ export async function generateLicensePdf(opts: {
 
   const bytes = await doc.save();
   fs.writeFileSync(pdfPath, bytes);
-  return pdfPath;
+  // Stable marker; resolve via resolveLicensePdfPath()
+  return `tmp/licenses/${opts.licenseId}.pdf`;
 }
+
+/** Absolute path under /tmp for a stored pdfPath marker or legacy cwd-relative path. */
+export function resolveLicensePdfPath(stored: string, licenseId?: string): string {
+  if (stored.startsWith("tmp/licenses/") || stored.startsWith("tmp"+path.sep+"licenses")) {
+    const id = licenseId || path.basename(stored, ".pdf");
+    return path.join(os.tmpdir(), "rap-app", "licenses", `${id}.pdf`);
+  }
+  if (path.isAbsolute(stored)) return stored;
+  return path.join(process.cwd(), stored);
+}
+

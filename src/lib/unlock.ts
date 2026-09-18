@@ -1,12 +1,14 @@
 import { prisma } from "./prisma";
 import { generateLicensePdf } from "./pdf";
-import path from "path";
+import { unlockedLedgerUpdate } from "./ledger";
 
 /**
  * Idempotent unlock after verified webhook:
  * - amount/order already matched by caller
  * - creates license + PDF once
  * - exclusive: atomic sold WHERE status in (reserved, available) + delist + audit
+ * - on success: unlockedAt + payableAt = unlockedAt + 5d
+ * - conflict / uncleared → throw (caller freezes order; no download / not payable)
  */
 export async function unlockOrder(orderId: string) {
   return prisma.$transaction(async (tx) => {
@@ -22,12 +24,15 @@ export async function unlockOrder(orderId: string) {
     if (order.status === "unlocked" && order.license) {
       return { order, license: order.license, already: true as const };
     }
+    if (order.status === "failed") {
+      throw new Error("ORDER_FROZEN");
+    }
     if (order.status !== "paid" && order.status !== "unlocked") {
       throw new Error("ORDER_NOT_PAID");
     }
 
     if (order.sku === "exclusive") {
-      // Atomic: only succeed if reserved (checkout) or still available
+      // Atomic: only succeed if reserved (checkout) or still available; requires clean samples
       const updated = await tx.beat.updateMany({
         where: { id: order.beatId, status: { in: ["available", "reserved"] }, sampleFlag: "clean" },
         data: { status: "sold_exclusive", reservedAt: null },
@@ -70,15 +75,17 @@ export async function unlockOrder(orderId: string) {
       orderId: order.id,
     });
 
-    const rel = path.relative(process.cwd(), pdfPath);
     const updatedLicense = await tx.license.update({
       where: { id: license.id },
-      data: { pdfPath: rel },
+      data: { pdfPath },
     });
+
+    const unlockedAt = new Date();
+    const ledger = unlockedLedgerUpdate(order, unlockedAt);
 
     const updatedOrder = await tx.order.update({
       where: { id: order.id },
-      data: { status: "unlocked" },
+      data: { status: "unlocked", ...ledger },
       include: { beat: { include: { producer: true } }, buyer: true, license: true },
     });
 

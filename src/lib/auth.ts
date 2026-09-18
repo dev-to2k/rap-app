@@ -14,11 +14,13 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
 }
 
+export type UserRole = "buyer" | "producer" | "admin";
+
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: "buyer" | "producer";
+  role: UserRole;
 };
 
 export async function hashPassword(password: string) {
@@ -75,11 +77,17 @@ export async function getSession(): Promise<SessionUser | null> {
   return parseSessionToken(token);
 }
 
-export async function requireUser(roles?: Array<"buyer" | "producer">) {
-  const user = await getSession();
-  if (!user) return null;
-  if (roles && !roles.includes(user.role)) return null;
-  const db = await prisma.user.findUnique({ where: { id: user.id } });
+export async function requireUser(roles?: UserRole[]) {
+  const session = await getSession();
+  if (!session) return null;
+  const db = await prisma.user.findUnique({ where: { id: session.id } });
   if (!db) return null;
-  return user;
+  const role = db.role as UserRole;
+  if (roles && !roles.includes(role)) return null;
+  return {
+    id: db.id,
+    email: db.email,
+    name: db.name,
+    role,
+  };
 }

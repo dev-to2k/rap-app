@@ -16,7 +16,7 @@ model User {
   email     String     @unique
   name      String
   password  String
-  role      String     // buyer | producer
+  role      String     // buyer | producer | admin
   createdAt DateTime   @default(now())
   beats     Beat[]
   orders    Order[]
@@ -53,13 +53,31 @@ model Order {
   beat                  Beat      @relation(fields: [beatId], references: [id])
   sku                   String    // lease | wav | exclusive
   amountVnd             Int
+  /// Buyer gross (usually = amountVnd)
+  gmvVnd                Int       @default(0)
+  /// MoMo / PSP fee (MVP default 0)
+  momoFeeVnd            Int       @default(0)
+  /// Platform take = round(gmv * takeRateBps / 10000)
+  takeVnd               Int       @default(0)
+  /// Producer net = max(0, gmv - momoFee - take)
+  payableVnd            Int       @default(0)
+  /// CoS fund: portion of takeVnd held in platform fund (not ops-withdrawable)
+  fundWithheldFromTake  Int       @default(0)
+  /// CoS fund: takeVnd - fundWithheldFromTake (platform ops-withdrawable)
+  platformTakeWithdrawable Int    @default(0)
   takeRateBps           Int
-  status                String    @default("pending") // pending | paid | unlocked | failed
+  status                String    @default("pending") // pending | pending_ck | awaiting_payment | pending_confirm | paid | unlocked | failed
   paymentMethod         String?   // momo | vnpay | ck
   paymentRef            String?
   webhookIdempotencyKey String?   @unique
   createdAt             DateTime  @default(now())
   paidAt                DateTime?
+  /// Set when license unlock succeeds
+  unlockedAt            DateTime?
+  /// Finance: unlockedAt + 5d (48h dispute + T+3); null when failed/conflict/refund (not payable)
+  payableAt             DateTime?
+  /// Set when producer net credited once; blocks double-credit
+  creditedAt            DateTime?
   license               License?
 }
 

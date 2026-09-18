@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   if (!order || order.buyerId !== user.id) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
-  if (order.status !== "pending" && order.status !== "failed") {
+  if (order.status !== "pending" && order.status !== "pending_ck" && order.status !== "awaiting_payment" && order.status !== "failed") {
     return NextResponse.json({ order, message: "Already processed" });
   }
 

@@ -53,6 +53,9 @@ async function main() {
   const buyer = await prisma.user.create({
     data: { email: "buyer@rap.app", name: "Rapper VN", password: pw, role: "buyer" },
   });
+  const admin = await prisma.user.create({
+    data: { email: "admin@rap.app", name: "Rap Admin", password: pw, role: "admin" },
+  });
 
   const beats = [
     {
@@ -136,7 +139,9 @@ async function main() {
   console.log("  producer@rap.app (producer)");
   console.log("  minhprod@rap.app (producer)");
   console.log("  buyer@rap.app (buyer)");
+  console.log("  admin@rap.app (admin)");
   console.log(`Buyer id: ${buyer.id}`);
+  console.log(`Admin id: ${admin.id}`);
 }
 
 main()

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { getEffectiveTakeRateBps } from "@/lib/take-rate";
+import { createMarketplaceOrder, OrderError } from "@/lib/orders";
+import { releaseExpiredExclusiveReserves } from "@/lib/reserves";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -9,46 +9,45 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   beatId: z.string().min(1),
   sku: z.enum(["lease", "wav", "exclusive"]),
+  paymentMethod: z.enum(["momo", "vnpay", "ck"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Login required" }, { status: 401 });
 
+  try {
+    await releaseExpiredExclusiveReserves(15);
+  } catch (e) {
+    console.error("releaseExpiredExclusiveReserves", e);
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
-  const beat = await prisma.beat.findUnique({ where: { id: parsed.data.beatId } });
-  if (!beat || beat.status !== "available") {
-    return NextResponse.json({ error: "Beat unavailable" }, { status: 400 });
-  }
-  if (parsed.data.sku === "exclusive" && beat.sampleFlag === "uncleared") {
-    return NextResponse.json(
-      { error: "Exclusive forbidden for uncleared samples" },
-      { status: 400 }
-    );
-  }
-
-  const amountVnd =
-    parsed.data.sku === "lease"
-      ? beat.priceLease
-      : parsed.data.sku === "wav"
-        ? beat.priceWav
-        : beat.priceExclusive;
-
-  const takeRateBps = await getEffectiveTakeRateBps();
-
-  const order = await prisma.order.create({
-    data: {
+  try {
+    const order = await createMarketplaceOrder({
       buyerId: user.id,
-      beatId: beat.id,
+      beatId: parsed.data.beatId,
       sku: parsed.data.sku,
-      amountVnd,
-      takeRateBps,
-      status: "pending",
-    },
-  });
-
-  return NextResponse.json({ order }, { status: 201 });
+      paymentMethod: parsed.data.paymentMethod,
+    });
+    return NextResponse.json({ order }, { status: 201 });
+  } catch (e) {
+    const code = e instanceof OrderError ? e.code : e instanceof Error ? e.message : "";
+    if (code === "EXCLUSIVE_CONFLICT") {
+      return NextResponse.json({ error: "EXCLUSIVE_CONFLICT", code: "EXCLUSIVE_CONFLICT" }, { status: 409 });
+    }
+    if (code === "BEAT_UNAVAILABLE") {
+      return NextResponse.json({ error: "Beat unavailable", code: "BEAT_UNAVAILABLE" }, { status: 409 });
+    }
+    if (code === "EXCLUSIVE_FORBIDDEN_UNCLEARED") {
+      return NextResponse.json(
+        { error: "Exclusive forbidden for uncleared samples", code: "EXCLUSIVE_FORBIDDEN_UNCLEARED" },
+        { status: 400 },
+      );
+    }
+    throw e;
+  }
 }

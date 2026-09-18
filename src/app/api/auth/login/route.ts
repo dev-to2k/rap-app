@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role as "buyer" | "producer",
+    role: user.role as "buyer" | "producer" | "admin",
   });
   return NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 }
