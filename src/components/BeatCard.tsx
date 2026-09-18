@@ -64,7 +64,10 @@ export function BeatCard(props: Props) {
         </div>
         <Link href={`/beats/${props.id}`} className="block space-y-1.5 p-3">
           <div className="flex items-start justify-between gap-2">
-            <Truncate className="font-display text-lg font-semibold leading-6 text-foreground">
+            <Truncate
+              lines={2}
+              className="min-w-[7rem] flex-1 font-display text-base font-semibold leading-5 text-foreground sm:text-lg sm:leading-6"
+            >
               {props.title}
             </Truncate>
             <Badge variant="default" className="shrink-0 capitalize">

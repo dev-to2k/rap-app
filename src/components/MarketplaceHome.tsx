@@ -51,7 +51,7 @@ export function MarketplaceHome({
   const keys = Array.from(new Set(beats.map((b) => b.musicalKey)));
 
   return (
-    <Container className="content-max py-5">
+    <Container className="py-5">
       <header className="mb-5 space-y-2 fade-in">
         <p className="text-[13px] font-medium uppercase tracking-wider text-accent">{t("home.heroEyebrow")}</p>
         <h1 className="font-display text-[28px] font-extrabold leading-[34px] tracking-tight">
@@ -107,7 +107,7 @@ export function MarketplaceHome({
       {filtered.length === 0 ? (
         <EmptyState icon="music" title={t("home.emptyTitle")} description={t("home.emptyDescription")} />
       ) : (
-        <ul className="grid grid-cols-2 gap-3">
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-4">
           {filtered.map((b) => (
             <BeatCard
               key={b.id}

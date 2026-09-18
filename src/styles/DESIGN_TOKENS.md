@@ -24,7 +24,7 @@ Source: `/workspace/rap-app-design/REDESIGN-SPEC.md` (LOCKED CoS 18 Sep 2026)
 ## Motion / layout
 - Fade 150–200ms · ease-out · no bounce
 - Cover radius 12–16 · r-sm/md/lg/pill = 8/12/16/999
-- Tap ≥44px · content max 480px
+- Tap ≥44px · content max 480px (mobile, centered `mx-auto`); md ≥768 → ~768px; lg ≥1024 → ~1100px · home grid 2→3→4 cols
 
 ## Buyer rule
 Buyer UI never shows take-rate / quỹ / platform fee.

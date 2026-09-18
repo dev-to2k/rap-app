@@ -17,7 +17,7 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
   if (!beat) notFound();
 
   return (
-    <Container className="content-max space-y-6 py-5 fade-in">
+    <Container className="!max-w-[480px] space-y-6 py-5 fade-in">
       <Link
         href="/"
         className="tap-target inline-flex items-center gap-1 text-sm text-muted transition-fade hover:text-foreground"

@@ -34,7 +34,7 @@ const config: Config = {
         pill: "999px",
       },
       maxWidth: {
-        content: "480px",
+        content: "var(--content-max)",
       },
       transitionDuration: {
         fade: "180ms",

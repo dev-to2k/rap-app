@@ -24,8 +24,21 @@
   --r-md: 12px;
   --r-lg: 16px;
   --r-pill: 999px;
+  /* Mobile thumb column; widens on md+ so desktop is not a 480px demo strip */
   --content-max: 480px;
   --fade: 180ms;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --content-max: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-max: 1100px;
+  }
 }
 
 html {

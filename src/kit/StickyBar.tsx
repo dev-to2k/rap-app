@@ -10,7 +10,7 @@ export function StickyBar({ className, children, ...props }: HTMLAttributes<HTML
       )}
       {...props}
     >
-      <div className="mx-auto w-full max-w-content">{children}</div>
+      <div className="mx-auto w-full max-w-[480px]">{children}</div>
     </div>
   );
 }
