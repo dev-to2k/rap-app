@@ -303,7 +303,11 @@ export const vi = {
   },
 } as const;
 
-export type Messages = typeof vi;
+type DeepStringify<T> = {
+  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
+};
+
+export type Messages = DeepStringify<typeof vi>;
 
 export const en: Messages = {
   meta: {
