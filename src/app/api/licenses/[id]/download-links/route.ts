@@ -1,42 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { createDownloadToken } from "@/lib/signed-url";
+import {
+  assertMintAllowed,
+  clientDownloadError,
+  mintDownloadLinks,
+} from "@/lib/download-mint";
+import { DOWNLOAD_TTL_SECONDS } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+/**
+ * Mint (or renew) signed download links for a license.
+ * Gate: order status === unlocked (not mere paid), not frozen, session buyer owner.
+ * Unpublished/delisted beat does NOT block renew for already-unlocked orders.
+ */
+async function mint(req: NextRequest, id: string) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Login required" }, { status: 401 });
 
   const license = await prisma.license.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { order: true },
   });
-  if (!license || license.buyerId !== user.id) {
+  if (!license) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (license.order.status !== "unlocked") {
-    return NextResponse.json({ error: "Not unlocked" }, { status: 403 });
+
+  const gate = assertMintAllowed(license, user.id);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
-  const kinds: Array<"mp3" | "wav" | "stems" | "pdf"> = ["pdf"];
-  if (license.sku === "lease") kinds.unshift("mp3");
-  if (license.sku === "wav" || license.sku === "exclusive") kinds.unshift("mp3", "wav", "stems");
-
-  const links = kinds.map((fileKind) => {
-    const { token, expiresAt } = createDownloadToken({
-      licenseId: license.id,
-      beatId: license.beatId,
-      sku: license.sku,
-      fileKind,
+  try {
+    const links = await mintDownloadLinks(license);
+    const ttlSeconds = DOWNLOAD_TTL_SECONDS;
+    return NextResponse.json({
+      links,
+      ttlSeconds,
+      // Convenience: soonest expiry across links (for UI "Hết hạn sau Xm")
+      expiresAt: links.length ? Math.min(...links.map((l) => l.expiresAt)) : null,
     });
-    return {
-      fileKind,
-      url: `/api/download/${token}`,
-      expiresAt,
-    };
-  });
+  } catch (e) {
+    const code = e instanceof Error ? e.message : "error";
+    console.error("download_links_mint_failed", code);
+    return NextResponse.json(clientDownloadError(code), { status: 503 });
+  }
+}
 
-  return NextResponse.json({ links });
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  return mint(req, params.id);
+}
+
+/** Explicit renew — same mint path (TTL refresh / retry after expiry). */
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  return mint(req, params.id);
 }

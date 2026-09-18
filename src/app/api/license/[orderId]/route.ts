@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { createDownloadToken } from "@/lib/signed-url";
+import {
+  assertMintAllowed,
+  clientDownloadError,
+  mintDownloadLinks,
+} from "@/lib/download-mint";
+import { DOWNLOAD_TTL_SECONDS } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +21,44 @@ export async function GET(_req: NextRequest, { params }: { params: { orderId: st
   if (!order || order.buyerId !== user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (order.status !== "unlocked" || !order.license) {
+  if (!order.license) {
     return NextResponse.json({ error: "Chưa thanh toán — file chưa mở.", status: order.status }, { status: 403 });
   }
 
-  const kinds: Array<"mp3" | "wav" | "stems" | "pdf"> = ["pdf", "mp3"];
-  if (order.sku === "wav" || order.sku === "exclusive") {
-    kinds.push("wav", "stems");
+  const license = { ...order.license, order };
+  const gate = assertMintAllowed(license, user.id);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error, status: order.status }, { status: gate.status });
   }
 
-  const downloads = kinds.map((fileKind) => {
-    const { token, expiresAt } = createDownloadToken({
-      licenseId: order.license!.id,
-      beatId: order.beatId,
-      sku: order.sku,
-      fileKind,
-    });
-    return { fileKind, url: `/api/download/${token}`, expiresAt };
-  });
+  // Buyer-facing order only — no internal ledger (take/fund/payable/credited)
+  const orderPublic = {
+    id: order.id,
+    status: order.status,
+    sku: order.sku,
+    amountVnd: order.amountVnd,
+    beatId: order.beatId,
+    paidAt: order.paidAt,
+    unlockedAt: order.unlockedAt,
+  };
 
-  return NextResponse.json({ order, license: order.license, downloads });
+  try {
+    const downloads = await mintDownloadLinks(license);
+    return NextResponse.json({
+      order: orderPublic,
+      license: {
+        id: order.license.id,
+        orderId: order.license.orderId,
+        sku: order.license.sku,
+        createdAt: order.license.createdAt,
+      },
+      downloads,
+      ttlSeconds: DOWNLOAD_TTL_SECONDS,
+      expiresAt: downloads.length ? Math.min(...downloads.map((d) => d.expiresAt)) : null,
+    });
+  } catch (e) {
+    const code = e instanceof Error ? e.message : "error";
+    console.error("license_order_mint_failed", code);
+    return NextResponse.json(clientDownloadError(code), { status: 503 });
+  }
 }

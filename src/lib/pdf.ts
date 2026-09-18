@@ -4,6 +4,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { SKU_LABELS, formatVnd } from "./config";
+import { isR2Configured, licensePdfKey, putObject, toR2Marker } from "./r2";
 
 /** Legal MVP clauses — exact wording from Legal/Product; do not paraphrase. */
 export const LICENSE_CLAUSES = [
@@ -128,12 +129,25 @@ export async function generateLicensePdf(opts: {
 
   const bytes = await doc.save();
   fs.writeFileSync(pdfPath, bytes);
-  // Stable marker; resolve via resolveLicensePdfPath()
+
+  // Prod: private R2 object; marker stored on license.pdfPath
+  if (isR2Configured()) {
+    const key = licensePdfKey(opts.licenseId);
+    await putObject(key, Buffer.from(bytes), "application/pdf");
+    return toR2Marker(key);
+  }
+
+  // Local/dev fallback under /tmp (Vercel ephemeral when R2 unset)
   return `tmp/licenses/${opts.licenseId}.pdf`;
 }
 
 /** Absolute path under /tmp for a stored pdfPath marker or legacy cwd-relative path. */
 export function resolveLicensePdfPath(stored: string, licenseId?: string): string {
+  if (stored.startsWith("r2:")) {
+    // R2 objects are not local — callers must mint a signed URL instead.
+    const id = licenseId || path.basename(stored.replace(/^r2:/, ""), ".pdf");
+    return path.join(os.tmpdir(), "rap-app", "licenses", `${id}.pdf`);
+  }
   if (stored.startsWith("tmp/licenses/") || stored.startsWith("tmp"+path.sep+"licenses")) {
     const id = licenseId || path.basename(stored, ".pdf");
     return path.join(os.tmpdir(), "rap-app", "licenses", `${id}.pdf`);
