@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { beatAssetKey, isR2Configured, putObject, toR2Marker } from "@/lib/r2";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
   const beat = await prisma.beat.create({
     data: {
       title,
+      // Keep local path for restricted watermark preview (/api/preview)
       audioUrl: rel,
       wavUrl: ext === ".wav" ? rel : null,
       bpm: Number.isFinite(bpm) ? bpm : 120,
@@ -56,6 +58,20 @@ export async function POST(req: NextRequest) {
       coverUrl: "/covers/beat1.svg",
     },
   });
+
+  // Mirror unlock assets to private R2 (clients only ever get signed URLs)
+  if (isR2Configured()) {
+    const kind = ext === ".wav" ? ("wav" as const) : ("mp3" as const);
+    const key = beatAssetKey(beat.id, kind, ext.replace(".", ""));
+    const contentType = ext === ".wav" ? "audio/wav" : "audio/mpeg";
+    await putObject(key, buf, contentType);
+    if (ext === ".wav") {
+      await prisma.beat.update({
+        where: { id: beat.id },
+        data: { wavUrl: toR2Marker(key) },
+      });
+    }
+  }
 
   await prisma.auditLog.create({
     data: { beatId: beat.id, action: "beat_uploaded", meta: JSON.stringify({ title }) },

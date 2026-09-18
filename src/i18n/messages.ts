@@ -194,6 +194,9 @@ export const vi = {
     emptyDescription: "Mua beat để mở khóa file và PDF.",
     browse: "Xem beat",
     details: "Chi tiết",
+    beatUnlisted: "beat đã gỡ / không còn list (vẫn tải được)",
+    frozen: "Đơn bị đóng băng — không thể tải.",
+    notUnlocked: "Chưa mở khóa — hoàn tất thanh toán trước.",
   },
   download: {
     heading: "Tải file (đường dẫn ký số · hạn ngắn)",
@@ -202,6 +205,9 @@ export const vi = {
     stems: "Tải stem",
     pdf: "Tải PDF giấy phép",
     refresh: "Làm mới đường dẫn tải",
+    renew: "Lấy link mới",
+    expiresIn: "Hết hạn sau {m}m",
+    expired: "Link đã hết hạn — bấm Lấy link mới",
     failed: "Không tải được",
   },
   upload: {
@@ -505,6 +511,9 @@ export const en: Messages = {
     emptyDescription: "Buy a beat to unlock files and PDF.",
     browse: "Browse beats",
     details: "Details",
+    beatUnlisted: "beat unlisted (downloads still work)",
+    frozen: "Order frozen — downloads blocked.",
+    notUnlocked: "Not unlocked yet — finish payment first.",
   },
   download: {
     heading: "Downloads (signed link · short expiry)",
@@ -513,6 +522,9 @@ export const en: Messages = {
     stems: "Download stems",
     pdf: "Download license PDF",
     refresh: "Refresh download links",
+    renew: "Get new link",
+    expiresIn: "Expires in {m}m",
+    expired: "Link expired — get a new link",
     failed: "Failed",
   },
   upload: {

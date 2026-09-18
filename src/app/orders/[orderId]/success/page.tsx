@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { createDownloadToken } from "@/lib/signed-url";
+import { DownloadButtons } from "@/components/DownloadButtons";
 import { Alert, buttonClass, Card, PageHeader, Price } from "@/kit";
 import { getT } from "@/i18n/get-locale";
 
@@ -30,31 +30,14 @@ export default async function SuccessPage({ params }: { params: { orderId: strin
     );
   }
 
-  const kinds: Array<"pdf" | "mp3" | "wav" | "stems"> = ["pdf", "mp3"];
-  if (order.sku === "wav" || order.sku === "exclusive") kinds.push("wav", "stems");
-
-  const downloads = kinds.map((fileKind) => {
-    const { token } = createDownloadToken({
-      licenseId: order.license!.id,
-      beatId: order.beatId,
-      sku: order.sku,
-      fileKind,
-    });
-    return { fileKind, url: `/api/download/${token}` };
-  });
-
   return (
     <div className="mx-auto max-w-lg space-y-4">
       <PageHeader title={t("success.paid")} icon="sparkles" />
       <p className="text-muted">
         {order.beat.title} · {t(`sku.${order.sku}`)} · <Price amount={order.amountVnd} className="text-base" />
       </p>
-      <Card className="space-y-2 p-4">
-        {downloads.map((d) => (
-          <a key={d.fileKind} href={d.url} className={buttonClass({ className: "w-full" })}>
-            {t("success.download", { kind: d.fileKind.toUpperCase() })}
-          </a>
-        ))}
+      <Card className="p-4">
+        <DownloadButtons licenseId={order.license.id} />
       </Card>
       <Link href="/library" className={buttonClass({ variant: "ghost", size: "sm" })}>
         {t("success.toLibrary")}

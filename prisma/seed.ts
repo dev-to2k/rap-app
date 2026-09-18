@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+
+/** Demo seed uses local storage/audio. Prod Seed must configure R2_* for signed downloads. */
 import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";

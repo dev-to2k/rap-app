@@ -34,8 +34,8 @@ Repo: [`dev-to2k/rap-app`](https://github.com/dev-to2k/rap-app)
 
 - **Next.js 14** (App Router) + TypeScript + Tailwind (mobile-first)
 - **Prisma** + **SQLite** local (`file:./dev.db`) — prod đổi Postgres/Neon
-- Storage local `storage/` — prod → R2/S3
-- PDF license (`pdf-lib` / pdfkit) + signed download URL (HMAC, TTL ngắn)
+- Storage local `storage/` — prod private **Cloudflare R2** (`@aws-sdk/client-s3` + presigner)
+- PDF license (`pdf-lib`) + signed download (R2 TTL 15m; HMAC fallback khi chưa có R2)
 - Health: `GET /api/health`
 
 ---
@@ -73,13 +73,19 @@ Copy từ `.env.example` (không commit `.env`):
 
 | Key | Mục đích |
 |-----|----------|
-| `DATABASE_URL` | SQLite local / Postgres prod |
+| `DATABASE_URL` | Postgres (Neon) |
 | `SESSION_SECRET` | HMAC cookie session (≥32 ký tự) |
-| `DOWNLOAD_HMAC_SECRET` | Ký URL tải file |
+| `DOWNLOAD_HMAC_SECRET` | HMAC download tokens (local/dev khi chưa có R2) |
 | `WEBHOOK_SECRET` | Verify webhook stub |
 | `NEXT_PUBLIC_APP_URL` | Base URL app |
+| `R2_ACCOUNT_ID` | Cloudflare R2 account (prod Seed **bắt buộc**) |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 S3 API keys |
+| `R2_BUCKET` | Private bucket (no public access) |
+| `R2_ENDPOINT` | Optional; default `https://{account}.r2.cloudflarestorage.com` |
 
-Prod sẽ thêm: `R2_*`, `MOMO_*`, `VNPAY_*` (xem note Security/DevOps — chưa bắt buộc cho demo).
+**Prod Seed:** set full `R2_*` — PDF/audio/stems chỉ qua signed R2 URL (TTL 15m). Local/dev có thể bỏ R2 → fallback `/tmp` + `storage/` qua `/api/download/[token]`.
+
+Prod thêm: `MOMO_*`, `VNPAY_*` (xem note Security/DevOps).
 
 ---
 
