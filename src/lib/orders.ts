@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { getEffectiveTakeRateBps } from "./take-rate";
+import { computeOrderLedger } from "./ledger";
 
 export class OrderError extends Error {
   code: string;
@@ -42,11 +43,14 @@ export async function createMarketplaceOrder(input: {
         throw new OrderError("EXCLUSIVE_CONFLICT", "EXCLUSIVE_CONFLICT");
       }
     } else if (beat.status !== "available") {
+      // sold_exclusive / reserved / delisted: block new lease/WAV; prior paid leases stay valid
       throw new OrderError("BEAT_UNAVAILABLE", "Beat không còn bán");
     }
 
     const amountVnd =
       input.sku === "lease" ? beat.priceLease : input.sku === "wav" ? beat.priceWav : beat.priceExclusive;
+
+    const ledger = computeOrderLedger({ gmvVnd: amountVnd, takeRateBps, momoFeeVnd: 0 });
 
     return tx.order.create({
       data: {
@@ -55,6 +59,7 @@ export async function createMarketplaceOrder(input: {
         sku: input.sku,
         amountVnd,
         takeRateBps,
+        ...ledger,
         status: "pending",
         paymentMethod: input.paymentMethod,
       },
