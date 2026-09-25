@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DEFAULT_TAKE_RATE_BPS } from "@/lib/config";
-import { Button, Card, Checkbox, CurrencyInput, Field, Input, Radio, Select, Textarea } from "@/kit";
+import { Alert, Button, Card, Checkbox, CurrencyInput, Field, Input, Radio, Select, Stepper, Textarea } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 function sizeLabel(n: number) {
@@ -42,10 +42,15 @@ export function UploadForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [warn, setWarn] = useState("");
+  const [draftMsg, setDraftMsg] = useState("");
   const [master, setMaster] = useState<File | null>(null);
   const [preview, setPreview] = useState<File | null>(null);
   const [stems, setStems] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
+  const [masterUrl, setMasterUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [owned, setOwned] = useState(false);
   const [sellWav, setSellWav] = useState(true);
   const [sellStem, setSellStem] = useState(true);
@@ -70,6 +75,66 @@ export function UploadForm() {
   const stemLocked = !stems;
   const exclusiveLocked = meta.sampleFlag === "uncleared";
   const canPublish = Boolean(master) && meta.title.length >= 2 && owned && !busy;
+  // Tiến trình 3 bước Audio -> Meta -> Giá để highlight Stepper
+  const stepCurrent = master ? (meta.title.length >= 2 ? 3 : 2) : 1;
+
+  // Tạo URL xem trước và thu hồi khi đổi/hủy để tránh rò bộ nhớ
+  useEffect(() => {
+    if (!master) {
+      setMasterUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(master);
+    setMasterUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [master]);
+  useEffect(() => {
+    if (!preview) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(preview);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [preview]);
+  useEffect(() => {
+    if (!cover) {
+      setCoverUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(cover);
+    setCoverUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cover]);
+
+  // Kiểm tra định dạng phía client, chỉ cảnh báo inline
+  function pickFile(kind: "master" | "preview" | "stems" | "cover", f: File | null) {
+    setWarn("");
+    if (!f) {
+      if (kind === "master") setMaster(null);
+      if (kind === "preview") setPreview(null);
+      if (kind === "stems") setStems(null);
+      if (kind === "cover") setCover(null);
+      return;
+    }
+    const n = f.name.toLowerCase();
+    const ok =
+      kind === "master"
+        ? n.endsWith(".mp3") || n.endsWith(".wav")
+        : kind === "preview"
+          ? n.endsWith(".mp3")
+          : kind === "stems"
+            ? n.endsWith(".zip")
+            : f.type.startsWith("image/");
+    if (!ok) {
+      setWarn(t("upload.invalidFile"));
+      return;
+    }
+    if (kind === "master") setMaster(f);
+    if (kind === "preview") setPreview(f);
+    if (kind === "stems") setStems(f);
+    if (kind === "cover") setCover(f);
+  }
 
   async function publish() {
     if (!canPublish || !master) return;
@@ -143,6 +208,13 @@ export function UploadForm() {
 
   return (
     <div className="space-y-8 pb-28">
+      <Stepper current={stepCurrent} labels={[t("steps.audio"), t("steps.meta"), t("steps.price")]} />
+      {warn ? (
+        <Alert variant="warning" role="alert">
+          {warn}
+        </Alert>
+      ) : null}
+      {draftMsg ? <Alert variant="info">{draftMsg}</Alert> : null}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">{t("upload.audio")}</h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -151,30 +223,51 @@ export function UploadForm() {
             hint={t("upload.masterHint")}
             accept="audio/wav,audio/mpeg,.wav,.mp3"
             file={master}
-            onFile={setMaster}
+            onFile={(f) => pickFile("master", f)}
           />
           <FileDrop
             label={t("upload.preview")}
             hint={t("upload.previewHint")}
             accept="audio/mpeg,.mp3"
             file={preview}
-            onFile={setPreview}
+            onFile={(f) => pickFile("preview", f)}
           />
           <FileDrop
             label={t("upload.stems")}
             hint={t("upload.stemsHint")}
             accept=".zip,application/zip"
             file={stems}
-            onFile={setStems}
+            onFile={(f) => pickFile("stems", f)}
           />
           <FileDrop
             label={t("upload.cover")}
             hint={t("upload.coverHint")}
             accept="image/*"
             file={cover}
-            onFile={setCover}
+            onFile={(f) => pickFile("cover", f)}
           />
         </div>
+        {masterUrl ? (
+          <div className="space-y-1">
+            <p className="text-xs text-muted">{t("upload.previewAudio")}</p>
+            <audio controls src={masterUrl} className="w-full" preload="metadata" />
+          </div>
+        ) : null}
+        {previewUrl ? (
+          <div className="space-y-1">
+            <p className="text-xs text-muted">
+              {t("upload.preview")} · {t("upload.previewAudio")}
+            </p>
+            <audio controls src={previewUrl} className="w-full" preload="metadata" />
+          </div>
+        ) : null}
+        {coverUrl ? (
+          <div className="space-y-1">
+            <p className="text-xs text-muted">{t("upload.previewCover")}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt="" className="h-24 w-24 rounded-lg object-cover" />
+          </div>
+        ) : null}
       </section>
 
       <section className="space-y-3">
@@ -284,7 +377,11 @@ export function UploadForm() {
         <Checkbox name="ownership" checked={owned} required onChange={(e) => setOwned(e.target.checked)}>
           {t("upload.ownership")}
         </Checkbox>
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <Alert variant="danger" role="alert">
+            {error}
+          </Alert>
+        ) : null}
       </section>
 
       <div className="sticky bottom-4 z-20 flex flex-wrap justify-end gap-2 rounded-lg border border-border bg-background/95 p-3 backdrop-blur">
@@ -295,7 +392,7 @@ export function UploadForm() {
           variant="secondary"
           onClick={() => {
             setError("");
-            alert(t("upload.draftSaved"));
+            setDraftMsg(t("upload.draftSaved"));
           }}
         >
           {t("upload.saveDraft")}

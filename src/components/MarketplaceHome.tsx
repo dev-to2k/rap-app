@@ -14,6 +14,8 @@ export type CatalogBeat = {
   bpm: number;
   musicalKey: string;
   priceLease: number;
+  priceWav?: number;
+  priceExclusive?: number;
   sampleFlag: string;
   status?: string;
   producer: { name: string };
@@ -60,7 +62,7 @@ export function MarketplaceHome({
         <p className="text-[15px] leading-[22px] text-muted">{t("home.heroBody")}</p>
       </header>
 
-      <div className="sticky top-14 z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
+      <div className="sticky top-[104px] z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:top-14">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-[22px] font-bold leading-7">{t("home.catalogTitle")}</h2>
           <div className="flex gap-2 text-sm">
@@ -118,6 +120,9 @@ export function MarketplaceHome({
               bpm={b.bpm}
               musicalKey={b.musicalKey}
               price={b.priceLease}
+              priceWav={b.priceWav}
+              priceExclusive={b.priceExclusive}
+              status={b.status}
               audioUrl={b.audioUrl}
               sampleFlag={b.sampleFlag}
             />

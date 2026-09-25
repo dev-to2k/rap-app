@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { buttonClass } from "@/kit";
+import { Alert, Skeleton, buttonClass } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 type LinkItem = { fileKind: string; url: string; expiresAt: number };
@@ -72,15 +72,28 @@ export function DownloadButtons({ licenseId }: { licenseId: string }) {
   );
   const expired = mins !== null && mins <= 0;
 
+  const showSkeleton = loading && links.length === 0 && !error;
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" aria-busy={loading}>
       <h2 className="text-sm font-semibold text-muted">{t("download.heading")}</h2>
-      {mins !== null ? (
+      {showSkeleton ? (
+        <div className="space-y-2" aria-hidden="true">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      ) : null}
+      {mins !== null && !showSkeleton ? (
         <p className={`text-xs ${expired ? "text-danger" : "text-muted"}`}>
           {expired ? t("download.expired") : t("download.expiresIn", { m: String(mins) })}
         </p>
       ) : null}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <Alert variant="danger" role="alert">
+          {error}
+        </Alert>
+      ) : null}
       {links.map((l) => (
         <a
           key={l.fileKind}

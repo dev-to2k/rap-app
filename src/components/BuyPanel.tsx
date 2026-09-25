@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/config";
-import { Alert, Button, Icon, Price, Spinner, StickyBar } from "@/kit";
+import { Alert, Button, Icon, Price, Spinner, Stepper, StickyBar } from "@/kit";
 import { SkuSelector } from "./SkuSelector";
 import { useT } from "@/i18n/I18nProvider";
 
@@ -89,7 +89,9 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   );
 
   return (
-    <div className="space-y-4 pb-24 md:pb-0">
+    <div className="space-y-4">
+      {/* Bước 1/3 trong luồng mua */}
+      <Stepper current={1} labels={[t("steps.choose"), t("steps.pay"), t("steps.done")]} />
       <div>
         <h3 className="font-display text-[13px] font-semibold uppercase tracking-wide text-muted">
           {t("buy.chooseLicense")}
@@ -109,7 +111,11 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       {beat.sampleFlag === "uncleared" ? (
         <Alert variant="warning">{t("buy.unclearedAlert")}</Alert>
       ) : null}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <Alert variant="danger" role="alert">
+          {error}
+        </Alert>
+      ) : null}
 
       <div className="hidden space-y-3 md:block">
         <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">

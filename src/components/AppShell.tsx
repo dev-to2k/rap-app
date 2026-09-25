@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 import { MarketTopBar } from "./MarketTopBar";
 import { MobileTabBar } from "./MobileTabBar";
 import { MiniPlayer } from "./MiniPlayer";
-import { StudioSidebar } from "./StudioSidebar";
+import { STUDIO_ITEMS, StudioSidebar } from "./StudioSidebar";
 import { SiteFooter } from "./SiteFooter";
 import { LocaleSwitch } from "./LocaleSwitch";
 import Link from "next/link";
-import { Icon } from "@/kit";
+import { Icon, cn } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 type User = { name: string; role: string } | null;
@@ -37,7 +37,30 @@ export function AppShell({ user, children }: { user: User; children: ReactNode }
               </Link>
             </div>
           </header>
-          <div className="flex-1 pb-24">{children}</div>
+          {/* Nav ngang cho mobile, tái dùng STUDIO_ITEMS */}
+          <nav aria-label={t("shell.studio")} className="flex gap-2 overflow-x-auto border-b border-border px-4 py-2 lg:hidden">
+            {STUDIO_ITEMS.map((item) => {
+              const active =
+                item.href === "/studio" ? path === "/studio" : path.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "tap-target inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-2 text-sm transition-fade",
+                    active
+                      ? "border-accent bg-accent/10 text-foreground"
+                      : "border-border bg-surface text-muted",
+                  )}
+                >
+                  <Icon name={item.icon} size="sm" />
+                  {t(item.key)}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="flex-1 pb-28 lg:pb-20">{children}</div>
         </div>
         <MiniPlayer />
       </div>

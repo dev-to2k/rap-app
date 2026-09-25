@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Button, Card, Container, PageHeader, Price, Spinner } from "@/kit";
+import { Alert, Button, Card, Container, PageHeader, Price, Skeleton, Spinner, Stepper } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
 type Order = {
@@ -35,6 +35,7 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const dev = process.env.NODE_ENV === "development";
 
@@ -54,6 +55,8 @@ export default function CheckoutPage() {
       } else setError(t("checkout.loadError"));
     } catch {
       setError(t("checkout.loadError"));
+    } finally {
+      setLoading(false);
     }
   }, [orderId, router, t]);
 
@@ -145,8 +148,9 @@ export default function CheckoutPage() {
   const content = payment?.transferContent || orderId;
   const pendingConfirm = order?.status === "pending_confirm";
   const unlocked = order?.status === "unlocked" || order?.status === "paid";
-  const awaiting = order ? AWAITING.has(order.status) : true;
-  const failed = Boolean(error) || order?.status === "failed";
+  const awaiting = order ? AWAITING.has(order.status) || pendingConfirm : true;
+  // Tách trạng thái đơn thất bại khỏi lỗi mạng/hiển thị
+  const isFailed = order?.status === "failed";
 
   useEffect(() => {
     if (unlocked && orderId) {
@@ -154,10 +158,35 @@ export default function CheckoutPage() {
     }
   }, [unlocked, orderId, router]);
 
+  // Tự poll 5s khi đang chờ, dừng khi đã mở khóa
+  useEffect(() => {
+    if (!awaiting || unlocked || !orderId) return;
+    const id = setInterval(() => void load(), 5000);
+    return () => clearInterval(id);
+  }, [awaiting, unlocked, orderId, load]);
+
+  async function copyAll() {
+    const all = `${phone} · ${amount} · ${content}`;
+    await copyText("all", all);
+  }
+
+  if (loading && !order) {
+    return (
+      <Container className="mx-auto max-w-md space-y-4 py-8" aria-busy="true">
+        <Skeleton className="h-8 w-2/3" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-11 w-full" />
+      </Container>
+    );
+  }
+
   return (
     <Container className="mx-auto max-w-md space-y-4 py-8">
       <PageHeader title={t("checkout.title")} description={t("checkout.description")} icon="wallet" />
-      <Card className="space-y-4 p-6">
+      {/* Bước 2/3 trong luồng mua */}
+      <Stepper current={2} labels={[t("steps.choose"), t("steps.pay"), t("steps.done")]} />
+      <Alert variant="info">{t("checkout.reserveNote")}</Alert>
+      <Card className="space-y-4 p-6" aria-busy={busy}>
         <p className="font-mono text-xs text-muted">{t("checkout.order", { id: orderId })}</p>
         {order?.sku ? <p className="text-sm">{t(`sku.${order.sku}`)}</p> : null}
 
@@ -214,13 +243,30 @@ export default function CheckoutPage() {
             })}
           </p>
           <p className="text-xs text-warning">{t("checkout.ckWrongCode")}</p>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="tap-target w-full"
+            onClick={() => void copyAll()}
+          >
+            {copied === "all" ? t("checkout.copied") : t("checkout.copyAll")}
+          </Button>
         </div>
 
         {pendingConfirm ? (
           <Alert variant="info">{t("checkout.pendingConfirmBanner")}</Alert>
         ) : null}
 
-        {failed ? <Alert variant="danger">{error || t("checkout.unpaid")}</Alert> : null}
+        {isFailed ? (
+          <Alert variant="danger" role="alert">
+            {t("checkout.unpaid")}
+          </Alert>
+        ) : error ? (
+          <Alert variant="danger" role="alert">
+            {error}
+          </Alert>
+        ) : null}
 
         {awaiting ? (
           <Button className="w-full" disabled={busy || !orderId || !phone} onClick={() => void markTransferred()}>

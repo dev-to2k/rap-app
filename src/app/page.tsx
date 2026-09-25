@@ -15,6 +15,9 @@ export default async function HomePage({ searchParams }: { searchParams: { q?: s
     bpm: number;
     musicalKey: string;
     priceLease: number;
+    priceWav: number;
+    priceExclusive: number;
+    status: string;
     sampleFlag: string;
     producer: { name: string };
   }> = [];

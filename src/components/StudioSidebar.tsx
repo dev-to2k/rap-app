@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { cn, Icon, type IconName } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
-const ITEMS: { href: string; key: string; icon: IconName }[] = [
+// Danh mục dùng chung cho sidebar desktop và nav ngang mobile
+export const STUDIO_ITEMS: { href: string; key: string; icon: IconName }[] = [
   { href: "/studio", key: "studio.overview", icon: "dashboard" },
   { href: "/studio/catalog", key: "studio.catalog", icon: "disc" },
   { href: "/studio/upload", key: "studio.upload", icon: "upload" },
@@ -27,7 +28,7 @@ export function StudioSidebar() {
         <p className="mt-1 text-[10px] uppercase tracking-wider text-muted">{t("shell.studio")}</p>
       </div>
       <nav className="flex flex-col gap-0.5 px-2">
-        {ITEMS.map((item) => {
+        {STUDIO_ITEMS.map((item) => {
           const active = item.href === "/studio" ? path === "/studio" : path.startsWith(item.href);
           return (
             <Link

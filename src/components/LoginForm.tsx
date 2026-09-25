@@ -2,14 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Card, Field, Icon, Input, Spinner } from "@/kit";
+import { Alert, Button, Card, Field, Icon, Input, Spinner } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
+
+// Chỉ prefill tài khoản demo khi chạy development
+const isDev = process.env.NODE_ENV === "development";
 
 export function LoginForm({ next }: { next: string }) {
   const t = useT();
   const router = useRouter();
-  const [email, setEmail] = useState("buyer@rap.app");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState(isDev ? "buyer@rap.app" : "");
+  const [password, setPassword] = useState(isDev ? "password123" : "");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -51,14 +55,29 @@ export function LoginForm({ next }: { next: string }) {
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>
         <Field label={t("login.password")}>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              type={showPw ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="pr-16"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              aria-pressed={showPw}
+              className="tap-target absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 text-xs text-muted hover:text-foreground"
+            >
+              {showPw ? t("login.hidePassword") : t("login.showPassword")}
+            </button>
+          </div>
         </Field>
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <Alert variant="danger" role="alert">
+            {error}
+          </Alert>
+        ) : null}
         <Button type="submit" className="w-full" disabled={busy}>
           {busy ? (
             <span className="inline-flex items-center gap-2">

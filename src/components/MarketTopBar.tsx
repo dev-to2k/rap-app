@@ -14,6 +14,11 @@ export function MarketTopBar({ user }: { user: User }) {
   const router = useRouter();
   const [q, setQ] = useState("");
 
+  function onSearch(e: React.FormEvent) {
+    e.preventDefault();
+    router.push(q.trim() ? `/?q=${encodeURIComponent(q.trim())}` : "/");
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-2.5">
@@ -21,13 +26,7 @@ export function MarketTopBar({ user }: { user: User }) {
           <Icon name="flame" size="md" />
           Rap App
         </Link>
-        <form
-          className="hidden min-w-0 flex-1 md:block"
-          onSubmit={(e) => {
-            e.preventDefault();
-            router.push(q.trim() ? `/?q=${encodeURIComponent(q.trim())}` : "/");
-          }}
-        >
+        <form className="hidden min-w-0 flex-1 md:block" onSubmit={onSearch}>
           <div className="relative">
             <Icon name="search" size="sm" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <Input
@@ -78,6 +77,21 @@ export function MarketTopBar({ user }: { user: User }) {
             </Link>
           )}
         </div>
+      </div>
+      {/* Hàng tìm kiếm riêng cho mobile, tái dùng state q */}
+      <div className="px-4 pb-2.5 md:hidden">
+        <form onSubmit={onSearch}>
+          <div className="relative">
+            <Icon name="search" size="sm" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t("home.searchPlaceholder")}
+              aria-label={t("home.searchPlaceholder")}
+              className="pl-9"
+            />
+          </div>
+        </form>
       </div>
     </header>
   );

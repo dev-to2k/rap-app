@@ -27,18 +27,22 @@ export function SkuSelector({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-2">
+    <div role="radiogroup" aria-label={t("buy.chooseLicense")} className="grid grid-cols-1 gap-2">
       {SKUS.map((s) => {
         const disabled = s === "exclusive" && exclusiveDisabled;
+        const selected = sku === s;
         return (
           <button
             key={s}
             type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-disabled={disabled || undefined}
             disabled={disabled}
             onClick={() => onChange(s)}
             className={cn(
               "tap-target w-full rounded-lg border p-4 text-left transition-fade",
-              sku === s ? "border-accent bg-accent/10" : "border-border bg-surface",
+              selected ? "border-accent bg-accent/10" : "border-border bg-surface",
               disabled && "cursor-not-allowed opacity-40",
             )}
           >
@@ -46,7 +50,11 @@ export function SkuSelector({
               <span className="font-display text-[15px] font-semibold text-foreground">
                 {t(`sku.${s}`)}
               </span>
-              <Price amount={prices[s]} className={s === "exclusive" ? "text-exclusive" : undefined} />
+              <Price
+                amount={prices[s]}
+                tone={s === "exclusive" ? "seller" : "buyer"}
+                className={s === "exclusive" ? "text-exclusive" : undefined}
+              />
             </div>
             {s === "exclusive" && sampleFlag === "uncleared" ? (
               <p className="mt-1 text-xs text-warning">{t("buy.exclusiveUncleared")}</p>

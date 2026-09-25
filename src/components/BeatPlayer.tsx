@@ -34,8 +34,8 @@ export function BeatPlayer({
   }
 
   return (
-    <div className="relative mb-5 aspect-square w-full w-full overflow-hidden rounded-lg bg-surface-2">
-      <CoverArt src={coverUrl || "/covers/beat1.svg"} className="h-full w-full" />
+    <div className="relative mb-5 aspect-square w-full overflow-hidden rounded-lg bg-surface-2">
+      <CoverArt src={coverUrl || "/covers/beat1.svg"} alt={title} className="h-full w-full" />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent p-4 pt-20">
         <div className="flex items-center gap-3">
           <PlayButton
