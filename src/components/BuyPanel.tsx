@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/config";
-import { Alert, Button, Icon, Price, Spinner, Stepper, StickyBar } from "@/kit";
+import { Alert, Button, Icon, Price, Spinner, Stepper, StickyBar, StickyBarSpacer } from "@/kit";
 import { SkuSelector } from "./SkuSelector";
 import { useT } from "@/i18n/I18nProvider";
 
@@ -117,18 +117,10 @@ export function BuyPanel({ beat }: { beat: Beat }) {
         </Alert>
       ) : null}
 
-      <div className="hidden space-y-3 md:block">
-        <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
-          <span className="text-sm text-muted">{t("buy.subtotal")}</span>
-          <Price amount={price} className="text-lg" />
-        </div>
-        <Button className="tap-target w-full rounded-full" disabled={buyDisabled} onClick={() => void checkout()}>
-          {ctaInner}
-        </Button>
-        <p className="text-center text-xs text-muted">{t("buy.ctaHint", { price: formatVnd(price) })}</p>
-      </div>
+      {/* Hint only — primary CTA lives in viewport-fixed StickyBar (mobile ~480 + desktop). */}
+      <p className="text-center text-xs text-muted md:text-left">{t("buy.ctaHint", { price: formatVnd(price) })}</p>
 
-      <StickyBar className="md:hidden">
+      <StickyBar>
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[12px] text-muted">{t("buy.subtotal")}</p>
@@ -143,6 +135,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
           </Button>
         </div>
       </StickyBar>
+      <StickyBarSpacer />
     </div>
   );
 }
