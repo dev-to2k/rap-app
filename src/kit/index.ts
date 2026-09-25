@@ -18,7 +18,7 @@ export { Spinner } from "./Spinner";
 export { Price } from "./Price";
 export { Container } from "./Container";
 export { PageHeader } from "./PageHeader";
-export { StickyBar } from "./StickyBar";
+export { StickyBar, StickyBarSpacer, StickyBarShell } from "./StickyBar";
 export { Stepper } from "./Stepper";
 export { Chip } from "./Chip";
 export { CoverArt } from "./CoverArt";

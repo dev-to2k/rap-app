@@ -346,6 +346,12 @@ export const vi = {
     emptyDescription: "Danh sách đơn và khóa độc quyền sẽ lên ở bản sau.",
     catalog: "← Danh mục",
   },
+  beat: {
+    notFoundTitle: "Không tìm thấy beat",
+    notFoundDescription:
+      "Beat này không tồn tại, đã bị gỡ hoặc link không đúng. Quay lại chợ để chọn beat khác.",
+    backExplore: "Về khám phá",
+  },
 } as const;
 
 type DeepStringify<T> = {
@@ -701,6 +707,12 @@ export const en: Messages = {
     emptyTitle: "No sales dashboard yet",
     emptyDescription: "Order list and exclusive lock land in a later build.",
     catalog: "← Catalog",
+  },
+  beat: {
+    notFoundTitle: "Beat not found",
+    notFoundDescription:
+      "This beat does not exist, was removed, or the link is wrong. Head back to explore other beats.",
+    backExplore: "Back to explore",
   },
 };
 
