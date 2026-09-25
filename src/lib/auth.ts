@@ -1,10 +1,13 @@
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { getSessionSecret, sessionCookieSecure, timingSafeEqualStr } from "./security";
 
-const COOKIE = "rap_session";
+export const SESSION_COOKIE = "rap_session";
+const COOKIE = SESSION_COOKIE;
+const SESSION_MAX_AGE = 60 * 60 * 24 * 14;
 
 function secret() {
   return getSessionSecret();
@@ -50,6 +53,16 @@ export function parseSessionToken(token: string): SessionUser | null {
   }
 }
 
+export function sessionCookieOptions(maxAge: number = SESSION_MAX_AGE) {
+  return {
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    path: "/",
+    secure: sessionCookieSecure(),
+    maxAge,
+  };
+}
+
 function cookieBase() {
   return {
     httpOnly: true as const,
@@ -59,11 +72,22 @@ function cookieBase() {
   };
 }
 
+/** Attach session Set-Cookie on a Route Handler response (reliable on Next 14). */
+export function applySessionCookie(res: NextResponse, user: SessionUser): NextResponse {
+  res.cookies.set(COOKIE, createSessionToken(user), sessionCookieOptions(SESSION_MAX_AGE));
+  return res;
+}
+
+export function applyClearSessionCookie(res: NextResponse): NextResponse {
+  res.cookies.set(COOKIE, "", { ...sessionCookieOptions(0), maxAge: 0 });
+  return res;
+}
+
 export async function setSession(user: SessionUser) {
   const token = createSessionToken(user);
   cookies().set(COOKIE, token, {
     ...cookieBase(),
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge: SESSION_MAX_AGE,
   });
 }
 
@@ -90,4 +114,15 @@ export async function requireUser(roles?: UserRole[]) {
     name: db.name,
     role,
   };
+}
+
+/**
+ * Same-origin relative path only — blocks open redirects after login/signup.
+ */
+export function safeNextPath(raw: string | null | undefined, fallback = "/"): string {
+  if (!raw) return fallback;
+  const next = raw.trim();
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return fallback;
+  if (next.includes("://")) return fallback;
+  return next;
 }
