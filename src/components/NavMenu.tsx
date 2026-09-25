@@ -55,10 +55,15 @@ export function NavAuth({ user }: { user: User }) {
     );
   }
   return (
-    <Link href="/login" className={buttonClass({ size: "sm", className: "hidden lg:inline-flex" })}>
-      <Icon name="login" size="sm" />
-      {t("nav.login")}
-    </Link>
+    <div className="hidden items-center gap-2 lg:flex">
+      <Link href="/login" className={buttonClass({ variant: "secondary", size: "sm" })}>
+        <Icon name="login" size="sm" />
+        {t("nav.login")}
+      </Link>
+      <Link href="/signup" className={buttonClass({ size: "sm" })}>
+        {t("nav.signup")}
+      </Link>
+    </div>
   );
 }
 
@@ -101,10 +106,15 @@ export function MobileNav({ user }: { user: User }) {
                   </Button>
                 </form>
               ) : (
-                <Link href="/login" className={buttonClass({ size: "sm", className: "w-full" })} onClick={() => setOpen(false)}>
-                  <Icon name="login" size="sm" />
-                  {t("nav.login")}
-                </Link>
+                <div className="flex flex-col gap-2">
+                  <Link href="/login" className={buttonClass({ variant: "secondary", size: "sm", className: "w-full" })} onClick={() => setOpen(false)}>
+                    <Icon name="login" size="sm" />
+                    {t("nav.login")}
+                  </Link>
+                  <Link href="/signup" className={buttonClass({ size: "sm", className: "w-full" })} onClick={() => setOpen(false)}>
+                    {t("nav.signup")}
+                  </Link>
+                </div>
               )}
             </div>
           </nav>
