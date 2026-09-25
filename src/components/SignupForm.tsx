@@ -5,13 +5,11 @@ import { useState } from "react";
 import { Alert, Button, Card, Field, Icon, Input, Spinner } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 
-// Prefill demo account only in development
-const isDev = process.env.NODE_ENV === "development";
-
-export function LoginForm({ next }: { next: string }) {
+export function SignupForm({ next }: { next: string }) {
   const t = useT();
-  const [email, setEmail] = useState(isDev ? "buyer@rap.app" : "");
-  const [password, setPassword] = useState(isDev ? "password123" : "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,25 +19,25 @@ export function LoginForm({ next }: { next: string }) {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
       const text = await res.text();
       let data: { error?: string } = {};
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        setError(t("login.dbError"));
+        setError(t("signup.dbError"));
         return;
       }
       if (!res.ok) {
-        setError(data.error || t("login.failed"));
+        setError(data.error || t("signup.failed"));
         return;
       }
-      // Hard navigation so rap_session is present on the next document request (avoids checkout 401 loop)
+      // Hard navigation so rap_session cookie is sent on the next document request
       window.location.assign(next);
     } catch {
       setError(t("common.networkError"));
@@ -51,17 +49,34 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit}>
       <Card className="space-y-3 p-6">
-        <Field label={t("login.email")}>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        <Field label={t("signup.name")}>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoComplete="name"
+            maxLength={80}
+          />
         </Field>
-        <Field label={t("login.password")}>
+        <Field label={t("signup.email")}>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </Field>
+        <Field label={t("signup.password")}>
           <div className="relative">
             <Input
               type={showPw ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              minLength={8}
+              autoComplete="new-password"
               className="pr-16"
             />
             <button
@@ -73,6 +88,7 @@ export function LoginForm({ next }: { next: string }) {
               {showPw ? t("login.hidePassword") : t("login.showPassword")}
             </button>
           </div>
+          <p className="mt-1 text-xs text-muted">{t("signup.passwordHint")}</p>
         </Field>
         {error ? (
           <Alert variant="danger" role="alert">
@@ -82,22 +98,22 @@ export function LoginForm({ next }: { next: string }) {
         <Button type="submit" className="w-full" disabled={busy}>
           {busy ? (
             <span className="inline-flex items-center gap-2">
-              <Spinner /> {t("login.submitting")}
+              <Spinner /> {t("signup.submitting")}
             </span>
           ) : (
             <>
               <Icon name="login" size="sm" />
-              {t("login.submit")}
+              {t("signup.submit")}
             </>
           )}
         </Button>
         <p className="text-center text-sm text-muted">
-          {t("login.noAccount")}{" "}
+          {t("signup.haveAccount")}{" "}
           <Link
-            href={`/signup?next=${encodeURIComponent(next)}`}
+            href={`/login?next=${encodeURIComponent(next)}`}
             className="font-medium text-accent hover:underline"
           >
-            {t("nav.signup")}
+            {t("nav.login")}
           </Link>
         </p>
       </Card>

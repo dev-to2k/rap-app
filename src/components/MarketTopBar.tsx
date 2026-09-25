@@ -71,10 +71,15 @@ export function MarketTopBar({ user }: { user: User }) {
               {user.name.slice(0, 1)}
             </Link>
           ) : (
-            <Link href="/login" className={buttonClass({ size: "sm" })}>
-              <Icon name="login" size="sm" />
-              {t("nav.login")}
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link href="/login" className={buttonClass({ variant: "secondary", size: "sm" })}>
+                <Icon name="login" size="sm" />
+                {t("nav.login")}
+              </Link>
+              <Link href="/signup" className={buttonClass({ size: "sm" })}>
+                {t("nav.signup")}
+              </Link>
+            </div>
           )}
         </div>
       </div>

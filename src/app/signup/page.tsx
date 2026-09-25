@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { getSession, safeNextPath } from "@/lib/auth";
-import { LoginForm } from "@/components/LoginForm";
+import { SignupForm } from "@/components/SignupForm";
 import { Container, PageHeader } from "@/kit";
 import { getT } from "@/i18n/get-locale";
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
   searchParams: { next?: string };
@@ -13,15 +13,10 @@ export default async function LoginPage({
   const next = safeNextPath(searchParams.next, "/");
   if (user) redirect(next);
   const t = getT();
-  const paywall = next.includes("/checkout");
   return (
     <Container className="mx-auto max-w-md space-y-4 py-8">
-      <PageHeader
-        title={paywall ? t("login.paywallTitle") : t("login.title")}
-        description={paywall ? t("login.paywallBody") : undefined}
-        icon="login"
-      />
-      <LoginForm next={next} />
+      <PageHeader title={t("signup.title")} description={t("signup.body")} icon="login" />
+      <SignupForm next={next} />
     </Container>
   );
 }
