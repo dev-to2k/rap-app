@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { getEffectiveTakeRateBps } from "./take-rate";
 import { computeOrderLedger } from "./ledger";
+import { isPayosConfigured } from "./payos";
 
 export class OrderError extends Error {
   code: string;
@@ -52,9 +53,21 @@ export async function createMarketplaceOrder(input: {
 
     const ledger = computeOrderLedger({ gmvVnd: amountVnd, takeRateBps, momoFeeVnd: 0 });
 
-    const method = input.paymentMethod || "momo";
+    let method = input.paymentMethod || "momo";
+    // payOS preferred when configured; missing keys → graceful CK (momo) rail
+    if (method === "payos" && !isPayosConfigured()) {
+      method = "momo";
+    }
+    if (method === "auto") {
+      method = isPayosConfigured() ? "payos" : "momo";
+    }
+
     const awaiting =
-      method === "momo" || method === "ck" ? "pending_ck" : "awaiting_payment";
+      method === "payos"
+        ? "awaiting_payment"
+        : method === "momo" || method === "ck"
+          ? "pending_ck"
+          : "awaiting_payment";
 
     return tx.order.create({
       data: {

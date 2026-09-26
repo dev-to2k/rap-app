@@ -41,7 +41,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ beatId: beat.id, sku, paymentMethod: "momo" }),
+        body: JSON.stringify({ beatId: beat.id, sku, paymentMethod: "auto" }),
       });
       const text = await res.text();
       let data: { error?: string; order?: { id: string } } = {};

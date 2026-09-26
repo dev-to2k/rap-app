@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createMarketplaceOrder, OrderError } from "@/lib/orders";
 import { releaseExpiredExclusiveReserves } from "@/lib/reserves";
+import { buyerSafeOrder } from "@/lib/buyer-safe-order";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   beatId: z.string().min(1),
   sku: z.enum(["lease", "wav", "exclusive"]),
-  paymentMethod: z.enum(["momo", "vnpay", "ck"]).optional(),
+  paymentMethod: z.enum(["momo", "vnpay", "ck", "payos", "auto"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       sku: parsed.data.sku,
       paymentMethod: parsed.data.paymentMethod,
     });
-    return NextResponse.json({ order }, { status: 201 });
+    return NextResponse.json({ order: buyerSafeOrder(order as unknown as Record<string, unknown>) }, { status: 201 });
   } catch (e) {
     const code = e instanceof OrderError ? e.code : e instanceof Error ? e.message : "";
     if (code === "EXCLUSIVE_CONFLICT") {

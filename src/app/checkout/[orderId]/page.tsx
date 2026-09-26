@@ -14,10 +14,21 @@ type Order = {
   license?: { id: string } | null;
 };
 
+type PayosInfo = {
+  orderCode: number;
+  paymentLinkId: string;
+  checkoutUrl: string;
+  qrCode?: string;
+};
+
 type PaymentInfo = {
   momoPhone: string;
   amountVnd: number;
   transferContent: string;
+  ttlMinutes?: number;
+  expiresAt?: string;
+  payosConfigured?: boolean;
+  payos?: PayosInfo | null;
 };
 
 const AWAITING = new Set(["pending", "pending_ck", "awaiting_payment"]);
@@ -33,10 +44,13 @@ export default function CheckoutPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
+  const [payosLive, setPayosLive] = useState<PayosInfo | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [payosBusy, setPayosBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
+  const [payosTried, setPayosTried] = useState(false);
   const dev = process.env.NODE_ENV === "development";
 
   const load = useCallback(async () => {
@@ -52,6 +66,7 @@ export default function CheckoutPage() {
       if (res.ok && data.order) {
         setOrder(data.order);
         if (data.payment) setPayment(data.payment);
+        if (data.payment?.payos) setPayosLive(data.payment.payos);
       } else setError(t("checkout.loadError"));
     } catch {
       setError(t("checkout.loadError"));
@@ -63,6 +78,77 @@ export default function CheckoutPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const createPayos = useCallback(
+    async (retry = false) => {
+      if (!orderId) return;
+      setPayosBusy(true);
+      setError("");
+      try {
+        const res = await fetch(`/api/orders/${orderId}/payos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ retry }),
+        });
+        const text = await res.text();
+        let data: {
+          payos?: PayosInfo;
+          order?: Order;
+          error?: string;
+          code?: string;
+          fallback?: string;
+        } = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          setError(t("checkout.payError"));
+          return;
+        }
+        if (res.status === 401) {
+          router.push("/login?next=" + encodeURIComponent(`/checkout/${orderId}`));
+          return;
+        }
+        if (res.status === 503 || data.code === "PAYOS_KEYS_MISSING") {
+          // Graceful — CK rail stays
+          setPayosTried(true);
+          return;
+        }
+        if (!res.ok) {
+          setError(data.error || t("checkout.payosFallback"));
+          setPayosTried(true);
+          return;
+        }
+        if (data.order) setOrder(data.order);
+        if (data.payos) {
+          setPayosLive(data.payos);
+          setPayment((prev) =>
+            prev
+              ? { ...prev, payosConfigured: true, payos: data.payos! }
+              : prev,
+          );
+        }
+        setPayosTried(true);
+      } catch {
+        setError(t("common.networkError"));
+        setPayosTried(true);
+      } finally {
+        setPayosBusy(false);
+      }
+    },
+    [orderId, router, t],
+  );
+
+  // Auto-create payOS link when configured and awaiting
+  useEffect(() => {
+    if (!order || !payment || payosTried || payosBusy) return;
+    if (!payment.payosConfigured) return;
+    if (!AWAITING.has(order.status) && order.status !== "pending_confirm") return;
+    if (payment.payos?.checkoutUrl || payosLive?.checkoutUrl) {
+      setPayosTried(true);
+      return;
+    }
+    void createPayos(false);
+  }, [order, payment, payosTried, payosBusy, payosLive, createPayos]);
 
   async function copyText(label: string, value: string) {
     try {
@@ -146,11 +232,13 @@ export default function CheckoutPage() {
   const phone = payment?.momoPhone || "";
   const amount = payment?.amountVnd ?? order?.amountVnd ?? 0;
   const content = payment?.transferContent || orderId;
+  const ttlMinutes = payment?.ttlMinutes ?? 60;
   const pendingConfirm = order?.status === "pending_confirm";
   const unlocked = order?.status === "unlocked" || order?.status === "paid";
   const awaiting = order ? AWAITING.has(order.status) || pendingConfirm : true;
-  // Tách trạng thái đơn thất bại khỏi lỗi mạng/hiển thị
   const isFailed = order?.status === "failed";
+  const payosConfigured = Boolean(payment?.payosConfigured);
+  const payos = payosLive || payment?.payos || null;
 
   useEffect(() => {
     if (unlocked && orderId) {
@@ -158,7 +246,6 @@ export default function CheckoutPage() {
     }
   }, [unlocked, orderId, router]);
 
-  // Tự poll 5s khi đang chờ, dừng khi đã mở khóa
   useEffect(() => {
     if (!awaiting || unlocked || !orderId) return;
     const id = setInterval(() => void load(), 5000);
@@ -183,10 +270,10 @@ export default function CheckoutPage() {
   return (
     <Container className="mx-auto max-w-md space-y-4 py-8">
       <PageHeader title={t("checkout.title")} description={t("checkout.description")} icon="wallet" />
-      {/* Bước 2/3 trong luồng mua */}
       <Stepper current={2} labels={[t("steps.choose"), t("steps.pay"), t("steps.done")]} />
       <Alert variant="info">{t("checkout.reserveNote")}</Alert>
-      <Card className="space-y-4 p-6" aria-busy={busy}>
+      <Alert variant="info">{t("checkout.ttlNote", { minutes: String(ttlMinutes) })}</Alert>
+      <Card className="space-y-4 p-6" aria-busy={busy || payosBusy}>
         <p className="font-mono text-xs text-muted">{t("checkout.order", { id: orderId })}</p>
         {order?.sku ? <p className="text-sm">{t(`sku.${order.sku}`)}</p> : null}
 
@@ -195,10 +282,57 @@ export default function CheckoutPage() {
           {amount ? <Price amount={amount} className="text-2xl" /> : null}
         </div>
 
+        {/* Primary rail: payOS when configured */}
+        {payosConfigured ? (
+          <div className="space-y-3 rounded-xl border border-border bg-surface/60 p-4 text-sm">
+            <p className="font-medium">{t("checkout.payosTitle")}</p>
+            <p className="text-xs text-muted">
+              {t("checkout.payosHint", { minutes: String(ttlMinutes) })}
+            </p>
+            {payosBusy && !payos ? (
+              <p className="inline-flex items-center gap-2 text-xs text-muted">
+                <Spinner /> {t("checkout.payosCreating")}
+              </p>
+            ) : null}
+            {payos?.checkoutUrl ? (
+              <>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={() => window.open(payos.checkoutUrl, "_blank", "noopener,noreferrer")}
+                >
+                  {t("checkout.payosOpen")}
+                </Button>
+                <p className="text-xs text-muted">{t("checkout.payosWaiting")}</p>
+                {payos.qrCode ? (
+                  <p className="break-all font-mono text-[10px] text-muted">{payos.qrCode}</p>
+                ) : null}
+                {awaiting && !isFailed ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    disabled={payosBusy}
+                    onClick={() => void createPayos(true)}
+                  >
+                    {payosBusy ? t("checkout.payosCreating") : t("checkout.payosRetry")}
+                  </Button>
+                ) : null}
+              </>
+            ) : payosTried && !payosBusy ? (
+              <Alert variant="warning">{t("checkout.payosFallback")}</Alert>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Dual-rail B: MoMo CK — always available when phone set */}
         <Alert variant="info">{t("checkout.ckDisclaimer")}</Alert>
 
         <div className="space-y-3 rounded-xl border border-border bg-surface/60 p-4 text-sm">
-          <p className="font-medium">{t("checkout.ckTitle")}</p>
+          <p className="font-medium">
+            {payosConfigured ? t("checkout.ckRailTitle") : t("checkout.ckTitle")}
+          </p>
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs text-muted">{t("checkout.ckPhone")}</p>

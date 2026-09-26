@@ -67,7 +67,7 @@ model Order {
   platformTakeWithdrawable Int    @default(0)
   takeRateBps           Int
   status                String    @default("pending") // pending | pending_ck | awaiting_payment | pending_confirm | paid | unlocked | failed
-  paymentMethod         String?   // momo | vnpay | ck
+  paymentMethod         String?   // momo | vnpay | ck | payos
   paymentRef            String?
   webhookIdempotencyKey String?   @unique
   createdAt             DateTime  @default(now())

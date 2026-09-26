@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { releaseExpiredExclusiveReserves } from "@/lib/reserves";
+import { expireUnpaidOrders } from "@/lib/payment-ttl";
+import { PAYOS_PAYMENT_TTL_MINUTES } from "@/lib/payos";
 import { isProductionRuntime } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +28,16 @@ function authorized(req: NextRequest): boolean {
 
 export async function GET(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const result = await releaseExpiredExclusiveReserves(15);
-  return NextResponse.json({ ok: true, ttlMinutes: 15, ...result });
+  const reserves = await releaseExpiredExclusiveReserves(15);
+  const payments = await expireUnpaidOrders(PAYOS_PAYMENT_TTL_MINUTES);
+  return NextResponse.json({
+    ok: true,
+    exclusiveReserveTtlMinutes: 15,
+    paymentTtlMinutes: PAYOS_PAYMENT_TTL_MINUTES,
+    ...reserves,
+    expiredOrderIds: payments.expiredOrderIds,
+    paymentReleasedBeatIds: payments.releasedBeatIds,
+  });
 }
 
 export async function POST(req: NextRequest) {
