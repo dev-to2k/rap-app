@@ -17,6 +17,7 @@ vi.mock("@/lib/confirm-payment", () => ({
   confirmPaymentAndUnlock: (...args: unknown[]) => confirmMock(...args),
 }));
 
+import { PAYOS_TTL_EXPIRE_STATUSES } from "@/lib/payment-ttl";
 import {
   createPaymentRequestSignature,
   createSignatureFromObj,
@@ -195,5 +196,14 @@ describe("POST /api/webhooks/payos", () => {
         idempotencyKey: "payos:124c33293c43417ab7879e14c8d9eb18",
       }),
     );
+  });
+});
+
+
+describe("payOS payment TTL CoS lock", () => {
+  it("expires only awaiting_payment — not pending_ck or pending", () => {
+    expect([...PAYOS_TTL_EXPIRE_STATUSES]).toEqual(["awaiting_payment"]);
+    expect(PAYOS_TTL_EXPIRE_STATUSES).not.toContain("pending_ck");
+    expect(PAYOS_TTL_EXPIRE_STATUSES).not.toContain("pending");
   });
 });

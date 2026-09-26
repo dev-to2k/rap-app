@@ -1,10 +1,13 @@
 import { prisma } from "./prisma";
 import { PAYOS_PAYMENT_TTL_MINUTES } from "./payos";
 
-const UNPAID_STATUSES = ["pending", "pending_ck", "awaiting_payment"] as const;
+/** CoS LOCK: TTL 60m expires ONLY payOS unpaid. pending_ck (CK tay) never auto-expires. */
+export const PAYOS_TTL_EXPIRE_STATUSES = ["awaiting_payment"] as const;
+const UNPAID_STATUSES = PAYOS_TTL_EXPIRE_STATUSES;
 
 /**
- * Expire unpaid orders older than ttlMinutes (default 60 — CoS payOS TTL).
+ * Expire payOS unpaid orders older than ttlMinutes (default 60 — CoS lock).
+ * Does NOT expire `pending_ck` / manual CK — those wait for admin confirm/cancel.
  * Exclusive SKUs also release soft-reserve on the beat.
  * Prefer calling on read (order GET) and from cron alongside exclusive reserve release.
  */
@@ -62,7 +65,7 @@ export async function expireUnpaidOrders(
   return { expiredOrderIds, releasedBeatIds };
 }
 
-/** Expire a single order if unpaid and past TTL. Returns true when expired this call. */
+/** Expire a single order if payOS unpaid and past TTL. Returns true when expired this call. */
 export async function expireOrderIfStale(
   orderId: string,
   ttlMinutes: number = PAYOS_PAYMENT_TTL_MINUTES,

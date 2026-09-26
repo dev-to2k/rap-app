@@ -40,7 +40,7 @@ payOS will POST a signed body `{ code, desc, success, data, signature }`. We ver
 2. Checkout page auto-calls `POST /api/orders/:id/payos` → payment link + optional QR.
 3. Dual-rail: CK block (phone + nội dung = order id) stays on the same page.
 4. Retry unpaid: `POST /api/orders/:id/payos` with `{ "retry": true }` — **same order**, new `orderCode` / `paymentRef`.
-5. TTL **60 minutes** — unpaid `pending` / `pending_ck` / `awaiting_payment` expire on order GET and via `/api/cron/release-reserves`.
+5. TTL **60 minutes** — ONLY unpaid payOS `awaiting_payment` expires on order GET and via `/api/cron/release-reserves`. **`pending_ck` (CK tay) does NOT expire** — waits admin confirm/cancel (CoS lock).
 
 ## Smoke checklist (needs sandbox keys from anh)
 
