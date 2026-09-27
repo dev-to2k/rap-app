@@ -2,6 +2,7 @@ import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { BeatPlayer } from "@/components/BeatPlayer";
 import { Badge, Card, Container, Icon } from "@/kit";
 import { getT } from "@/i18n/get-locale";
@@ -20,6 +21,7 @@ const BuyPanel = nextDynamic(
 
 export default async function BeatDetailPage({ params }: { params: { id: string } }) {
   const t = getT();
+  const session = await getSession();
   const beat = await prisma.beat.findUnique({
     where: { id: params.id },
     include: { producer: { select: { name: true } } },
@@ -76,6 +78,7 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
               sampleFlag: beat.sampleFlag,
               status: beat.status,
             }}
+            isGuest={!session}
           />
         </Card>
       </div>
