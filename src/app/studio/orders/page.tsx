@@ -112,7 +112,7 @@ export default async function StudioOrdersPage() {
       ) : (
         <>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Card className="p-4">
+          <Card className="p-4" data-testid="orders-gmv-summary">
             <p className="text-xs text-muted">{t("studio.ordersGmvTotal")}</p>
             <Price amount={unlockedGmv} tone="seller" className="text-xl" />
           </Card>
@@ -133,8 +133,8 @@ export default async function StudioOrdersPage() {
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
                         <span>{t(`sku.${order.sku}`)}</span>
                         <span aria-hidden>·</span>
-                        <span>
-                          {t("studio.colGmv")}:{" "}
+                        <span data-testid="order-gmv">
+                          {t("studio.ordersRowGmv")}:{" "}
                           <Price amount={order.gmvVnd} tone="seller" className="inline text-sm" />
                         </span>
                       </p>
