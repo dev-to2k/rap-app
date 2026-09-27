@@ -184,6 +184,7 @@ export const vi = {
     creating: "Đang tạo đơn…",
     checkoutError: "Lỗi thanh toán — thử lại",
     checkoutFailed: "Không thanh toán được",
+    retry: "Thử lại",
     noOrder: "Không tạo được đơn",
   },
   checkout: {
@@ -570,6 +571,7 @@ export const en: Messages = {
     creating: "Creating order…",
     checkoutError: "Checkout error — try again",
     checkoutFailed: "Checkout failed",
+    retry: "Try again",
     noOrder: "Could not create order",
   },
   checkout: {
