@@ -93,6 +93,15 @@ export const vi = {
     pipelineCk: "Chờ buyer chuyển CK",
     pipelineConfirm: "Buyer đã báo chuyển — chờ xác nhận",
     pipelineUnlocked: "Đã mở khóa cho buyer",
+    orderStatus: {
+      pending: "Chờ thanh toán",
+      pending_ck: "Chờ chuyển CK",
+      awaiting_payment: "Chờ thanh toán",
+      pending_confirm: "Chờ xác nhận",
+      paid: "Đã trả",
+      unlocked: "Đã mở khóa",
+      failed: "Thất bại",
+    },
     savePayout: "Lưu kênh nhận",
   },
   home: {
@@ -524,6 +533,15 @@ export const en: Messages = {
     pipelineCk: "Waiting for buyer bank transfer",
     pipelineConfirm: "Buyer marked transferred — awaiting confirm",
     pipelineUnlocked: "Unlocked for buyer",
+    orderStatus: {
+      pending: "Pending",
+      pending_ck: "Awaiting transfer",
+      awaiting_payment: "Awaiting payment",
+      pending_confirm: "Awaiting confirm",
+      paid: "Paid",
+      unlocked: "Unlocked",
+      failed: "Failed",
+    },
     savePayout: "Save payout method",
   },
   home: {
