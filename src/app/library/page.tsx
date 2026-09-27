@@ -131,6 +131,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: { sk
           })}
         </ul>
       )}
+      <p className="mt-8 text-[11px] leading-relaxed text-muted">{t("library.legalNotice")}</p>
     </Container>
   );
 }
