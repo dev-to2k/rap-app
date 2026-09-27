@@ -388,6 +388,10 @@ export default function CheckoutPage() {
           </Button>
         </div>
 
+        <p className="text-xs text-muted">{t("checkout.platformNote")}</p>
+        <p className="text-xs text-muted">{t("checkout.buyerTrust")}</p>
+        <p className="text-[11px] leading-relaxed text-muted">{t("checkout.legalNotice")}</p>
+
         {pendingConfirm ? (
           <Alert variant="info">{t("checkout.pendingConfirmBanner")}</Alert>
         ) : null}

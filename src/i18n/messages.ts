@@ -230,6 +230,8 @@ export const vi = {
     payosWaiting: "Đã mở link — trang tự kiểm tra khi thanh toán xong.",
     ttlNote: "Đơn chờ thanh toán hết hạn sau {minutes} phút.",
     ckRailTitle: "Chuyển khoản MoMo",
+    buyerTrust: "Bạn mua license từ producer qua Rap App — tiền về ví sàn, nhận PDF + file sau khi xác nhận CK; Exclusive = 1 buyer rồi gỡ bán, không bán exclusive lần 2 trên sàn.",
+    legalNotice: "Rap App là sàn trung gian — không sở hữu master. License: không bán lại, không sublicense. Sample do producer tự khai; uncleared = rủi ro. MoMo CK: file/PDF mở sau khi admin xác nhận đã nhận tiền (không auto). Exclusive ≠ Lease — quyền dùng khác nhau.",
   },
   success: {
     unpaid: "Chưa thanh toán — file chưa mở.",
@@ -260,6 +262,7 @@ export const vi = {
     beatUnlisted: "beat đã gỡ / không còn list (vẫn tải được)",
     frozen: "Đơn bị đóng băng — không thể tải.",
     notUnlocked: "Chưa mở khóa — hoàn tất thanh toán trước.",
+    legalNotice: "Rap App là sàn trung gian — không sở hữu master. License: không bán lại, không sublicense. Sample do producer tự khai; uncleared = rủi ro. MoMo CK: file/PDF mở sau khi admin xác nhận đã nhận tiền (không auto). Exclusive ≠ Lease — quyền dùng khác nhau.",
   },
   download: {
     heading: "Tải file (đường dẫn ký số · hạn ngắn)",
@@ -619,6 +622,8 @@ export const en: Messages = {
     payosWaiting: "Link opened — this page auto-checks when paid.",
     ttlNote: "Unpaid orders expire after {minutes} minutes.",
     ckRailTitle: "MoMo transfer",
+    buyerTrust: "You buy a license from the producer via Rap App — funds go to the platform wallet; PDF + files after CK is confirmed; Exclusive = one buyer then delisted, no second exclusive on the marketplace.",
+    legalNotice: "Rap App is a marketplace intermediary — we don’t own masters. License: no resale, no sublicense. Samples are producer-declared; uncleared = risk. MoMo CK: files/PDF unlock after admin confirms payment (not automatic). Exclusive ≠ Lease — different usage rights.",
   },
   success: {
     unpaid: "Unpaid — files stay locked.",
@@ -649,6 +654,7 @@ export const en: Messages = {
     beatUnlisted: "beat unlisted (downloads still work)",
     frozen: "Order frozen — downloads blocked.",
     notUnlocked: "Not unlocked yet — finish payment first.",
+    legalNotice: "Rap App is a marketplace intermediary — we don’t own masters. License: no resale, no sublicense. Samples are producer-declared; uncleared = risk. MoMo CK: files/PDF unlock after admin confirms payment (not automatic). Exclusive ≠ Lease — different usage rights.",
   },
   download: {
     heading: "Downloads (signed link · short expiry)",
