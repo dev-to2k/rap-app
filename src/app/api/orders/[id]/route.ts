@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { getPaymentMomoPhone } from "@/lib/payment-phone";
 import {
   isPayosConfigured,
   parsePayosPaymentRef,
@@ -32,17 +31,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const momoPhone = getPaymentMomoPhone();
   const payosConfigured = isPayosConfigured();
   const parsed = parsePayosPaymentRef(order.paymentRef);
   const expiresAt = new Date(order.createdAt.getTime() + PAYOS_PAYMENT_TTL_MINUTES * 60_000).toISOString();
 
+  // Buyer checkout is payOS-only — never dump MoMo phone / transfer content.
   return NextResponse.json({
     order: buyerSafeOrder(order as unknown as Record<string, unknown>),
     payment: {
-      momoPhone,
       amountVnd: order.amountVnd,
-      transferContent: order.id,
       ttlMinutes: PAYOS_PAYMENT_TTL_MINUTES,
       expiresAt,
       payosConfigured,

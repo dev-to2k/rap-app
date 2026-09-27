@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { QRCodeSVG } from "qrcode.react";
 import { Alert, Button, Card, Container, PageHeader, Price, Skeleton, Spinner, Stepper } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
-import { buildMomoCkQrPayload } from "@/lib/momo-ck-qr";
 
 type Order = {
   id: string;
@@ -24,9 +22,7 @@ type PayosInfo = {
 };
 
 type PaymentInfo = {
-  momoPhone: string;
   amountVnd: number;
-  transferContent: string;
   ttlMinutes?: number;
   expiresAt?: string;
   payosConfigured?: boolean;
@@ -51,8 +47,8 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [payosBusy, setPayosBusy] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState<string | null>(null);
   const [payosTried, setPayosTried] = useState(false);
+  const [payosKeysMissing, setPayosKeysMissing] = useState(false);
   const dev = process.env.NODE_ENV === "development";
 
   const load = useCallback(async () => {
@@ -111,8 +107,10 @@ export default function CheckoutPage() {
           return;
         }
         if (res.status === 503 || data.code === "PAYOS_KEYS_MISSING") {
-          // Graceful — CK rail stays
+          // Never fall back to manual MoMo CK — show not-configured state.
+          setPayosKeysMissing(true);
           setPayosTried(true);
+          setPayment((prev) => (prev ? { ...prev, payosConfigured: false } : prev));
           return;
         }
         if (!res.ok) {
@@ -151,46 +149,6 @@ export default function CheckoutPage() {
     }
     void createPayos(false);
   }, [order, payment, payosTried, payosBusy, payosLive, createPayos]);
-
-  async function copyText(label: string, value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(label);
-      setTimeout(() => setCopied(null), 2000);
-    } catch {
-      setError(t("checkout.copyFail"));
-    }
-  }
-
-  async function markTransferred() {
-    if (!orderId) return;
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/orders/${orderId}/transferred`, { method: "POST" });
-      const text = await res.text();
-      let data: { order?: Order; error?: string } = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        setError(t("checkout.payError"));
-        return;
-      }
-      if (res.status === 401) {
-        router.push("/login?next=" + encodeURIComponent(`/checkout/${orderId}`));
-        return;
-      }
-      if (!res.ok) {
-        setError(data.error || t("checkout.payError"));
-        return;
-      }
-      if (data.order) setOrder(data.order);
-    } catch {
-      setError(t("common.networkError"));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function mockPay(fail = false) {
     if (!orderId) return;
@@ -231,25 +189,13 @@ export default function CheckoutPage() {
     }
   }
 
-  const phone = payment?.momoPhone || "";
   const amount = payment?.amountVnd ?? order?.amountVnd ?? 0;
-  const content = payment?.transferContent || orderId;
   const ttlMinutes = payment?.ttlMinutes ?? 60;
   const pendingConfirm = order?.status === "pending_confirm";
   const unlocked = order?.status === "unlocked" || order?.status === "paid";
   const awaiting = order ? AWAITING.has(order.status) || pendingConfirm : true;
-  // Encode only when phone + amount + transferContent are present (no broken QR).
-  const ckQrPayload = useMemo(
-    () =>
-      buildMomoCkQrPayload({
-        phone,
-        amountVnd: amount,
-        transferContent: payment?.transferContent || "",
-      }),
-    [phone, amount, payment?.transferContent],
-  );
   const isFailed = order?.status === "failed";
-  const payosConfigured = Boolean(payment?.payosConfigured);
+  const payosConfigured = Boolean(payment?.payosConfigured) && !payosKeysMissing;
   const payos = payosLive || payment?.payos || null;
 
   useEffect(() => {
@@ -263,11 +209,6 @@ export default function CheckoutPage() {
     const id = setInterval(() => void load(), 5000);
     return () => clearInterval(id);
   }, [awaiting, unlocked, orderId, load]);
-
-  async function copyAll() {
-    const all = `${phone} · ${amount} · ${content}`;
-    await copyText("all", all);
-  }
 
   if (loading && !order) {
     return (
@@ -294,7 +235,7 @@ export default function CheckoutPage() {
           {amount ? <Price amount={amount} className="text-2xl" /> : null}
         </div>
 
-        {/* Primary rail: payOS when configured */}
+        {/* payOS-only buyer checkout — manual MoMo CK UI removed */}
         {payosConfigured ? (
           <div className="space-y-3 rounded-xl border border-border bg-surface/60 p-4 text-sm">
             <p className="font-medium">{t("checkout.payosTitle")}</p>
@@ -336,83 +277,9 @@ export default function CheckoutPage() {
               <Alert variant="warning">{t("checkout.payosFallback")}</Alert>
             ) : null}
           </div>
-        ) : null}
-
-        {/* Dual-rail B: MoMo CK — always available when phone set */}
-        <Alert variant="info">{t("checkout.ckDisclaimer")}</Alert>
-
-        <div className="space-y-3 rounded-xl border border-border bg-surface/60 p-4 text-sm">
-          <p className="font-medium">
-            {payosConfigured ? t("checkout.ckRailTitle") : t("checkout.ckTitle")}
-          </p>
-          {awaiting && ckQrPayload ? (
-            <div className="flex flex-col items-center gap-2 py-1">
-              <div className="rounded-lg bg-white p-3">
-                <QRCodeSVG
-                  value={ckQrPayload}
-                  size={180}
-                  level="M"
-                  className="h-[180px] w-[180px] min-h-[180px] min-w-[180px]"
-                  aria-label={t("checkout.ckQrAlt")}
-                />
-              </div>
-              <p className="max-w-xs text-center text-xs text-muted">{t("checkout.ckQrCaption")}</p>
-            </div>
-          ) : null}
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs text-muted">{t("checkout.ckPhone")}</p>
-              <p className="font-mono text-base">{phone || t("checkout.ckPhoneMissing")}</p>
-            </div>
-            {phone ? (
-              <Button type="button" variant="secondary" size="sm" onClick={() => void copyText("phone", phone)}>
-                {copied === "phone" ? t("checkout.copied") : t("checkout.copy")}
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs text-muted">{t("checkout.ckAmount")}</p>
-              <Price amount={amount} className="text-base" />
-            </div>
-            {amount ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => void copyText("amount", String(amount))}
-              >
-                {copied === "amount" ? t("checkout.copied") : t("checkout.copy")}
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-xs text-muted">{t("checkout.ckContent")}</p>
-              <p className="truncate font-mono text-base">{content}</p>
-            </div>
-            <Button type="button" variant="secondary" size="sm" onClick={() => void copyText("content", content)}>
-              {copied === "content" ? t("checkout.copied") : t("checkout.copy")}
-            </Button>
-          </div>
-          <p className="text-xs text-muted">
-            {t("checkout.ckGuide", {
-              phone: phone || "—",
-              amount: String(amount || 0),
-              content,
-            })}
-          </p>
-          <p className="text-xs text-warning">{t("checkout.ckWrongCode")}</p>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="tap-target w-full"
-            onClick={() => void copyAll()}
-          >
-            {copied === "all" ? t("checkout.copied") : t("checkout.copyAll")}
-          </Button>
-        </div>
+        ) : (
+          <Alert variant="warning">{t("checkout.payosNotConfigured")}</Alert>
+        )}
 
         <p className="text-xs text-muted">{t("checkout.platformNote")}</p>
         <p className="text-xs text-muted">{t("checkout.buyerTrust")}</p>
@@ -430,18 +297,6 @@ export default function CheckoutPage() {
           <Alert variant="danger" role="alert">
             {error}
           </Alert>
-        ) : null}
-
-        {awaiting ? (
-          <Button className="w-full" disabled={busy || !orderId || !phone} onClick={() => void markTransferred()}>
-            {busy ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner /> {t("checkout.confirming")}
-              </span>
-            ) : (
-              t("checkout.iTransferred")
-            )}
-          </Button>
         ) : null}
 
         {dev ? (
