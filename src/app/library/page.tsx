@@ -96,6 +96,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: { sk
                       src={beat?.coverUrl || "/covers/beat1.svg"}
                       alt={beat?.title || lic.beatId}
                       className="h-12 w-12 shrink-0 rounded-md"
+                      sizes="48px"
                     />
                     <div className="min-w-0">
                       <h2 className="truncate font-semibold">{beat?.title || lic.beatId}</h2>

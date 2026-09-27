@@ -27,7 +27,7 @@ export function MiniPlayer() {
           onClick={() => (playing ? pause() : play(nowPlaying))}
           label={playing ? t("common.pause") : t("common.play")}
         />
-        <CoverArt src={nowPlaying.coverUrl || "/covers/beat1.svg"} className="h-10 w-10 rounded-md" />
+        <CoverArt src={nowPlaying.coverUrl || "/covers/beat1.svg"} className="h-10 w-10 rounded-md" sizes="40px" />
         <Link href={nowPlaying.href} className="min-w-0 flex-1">
           <Truncate as="p" className="text-sm font-medium">{nowPlaying.title}</Truncate>
           <Truncate as="p" className="text-xs text-muted">{nowPlaying.producer}</Truncate>

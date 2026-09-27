@@ -19,13 +19,12 @@ type Props = {
   status?: string;
   audioUrl: string;
   sampleFlag: string;
+  /** First-row LCP covers. */
+  priority?: boolean;
 };
 
 /** Cover-first catalog card. */
 export function BeatCard(props: Props) {
-  const audioSrc = props.audioUrl
-    ? `/api/preview?path=${encodeURIComponent(props.audioUrl)}`
-    : "";
   const t = useT();
   const { toggle, nowPlaying, playing } = useAudioPlayback();
   const isThis = nowPlaying?.id === props.id && playing;
@@ -38,7 +37,13 @@ export function BeatCard(props: Props) {
       <Link href={`/beats/${props.id}`} className="block" aria-label={props.title}>
         <Card className="overflow-hidden p-0 transition-fade hover:border-accent/40">
           <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-surface-2">
-            <CoverArt src={props.coverUrl || "/covers/beat1.svg"} alt={props.title} className="h-full w-full" />
+            <CoverArt
+              src={props.coverUrl || "/covers/beat1.svg"}
+              alt={props.title}
+              className="h-full w-full"
+              priority={props.priority}
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
               <PlayButton
                 playing={isThis}
@@ -47,6 +52,10 @@ export function BeatCard(props: Props) {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  // Build preview URL only on intentional play — never prefetch on catalog paint.
+                  const audioSrc = props.audioUrl
+                    ? `/api/preview?path=${encodeURIComponent(props.audioUrl)}`
+                    : "";
                   toggle({
                     id: props.id,
                     title: props.title,

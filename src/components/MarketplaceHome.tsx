@@ -110,7 +110,7 @@ export function MarketplaceHome({
         <EmptyState icon="music" title={t("home.emptyTitle")} description={t("home.emptyDescription")} />
       ) : (
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-4">
-          {filtered.map((b) => (
+          {filtered.map((b, i) => (
             <BeatCard
               key={b.id}
               id={b.id}
@@ -125,6 +125,7 @@ export function MarketplaceHome({
               status={b.status}
               audioUrl={b.audioUrl}
               sampleFlag={b.sampleFlag}
+              priority={i < 4}
             />
           ))}
         </ul>
