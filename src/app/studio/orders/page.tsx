@@ -91,8 +91,13 @@ export default async function StudioOrdersPage() {
     }
   }
 
+  // Product AC: GMV summary = gross buyer-paid on unlocked only (no take, no paid/pending).
+  const unlockedGmv = rows
+    .filter((r) => r.status === "unlocked")
+    .reduce((s, r) => s + r.gmvVnd, 0);
+
   return (
-    <Container className="py-8">
+    <Container className="space-y-6 py-8">
       <PageHeader
         title={t("studio.orders")}
         description={t("studio.ordersDescription")}
@@ -105,6 +110,13 @@ export default async function StudioOrdersPage() {
           description={t("studio.emptyOrdersDescription")}
         />
       ) : (
+        <>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Card className="p-4">
+            <p className="text-xs text-muted">{t("studio.ordersGmvTotal")}</p>
+            <Price amount={unlockedGmv} tone="seller" className="text-xl" />
+          </Card>
+        </div>
         <ul className="space-y-3">
           {rows.map((order) => {
             const label = t(statusLabelKey(order.status));
@@ -160,6 +172,7 @@ export default async function StudioOrdersPage() {
             );
           })}
         </ul>
+        </>
       )}
     </Container>
   );
