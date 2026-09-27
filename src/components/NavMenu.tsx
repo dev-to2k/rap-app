@@ -14,6 +14,7 @@ function useNavLinks(): { href: string; label: string; icon: IconName }[] {
     { href: "/waitlist", label: t("nav.waitlist"), icon: "flame" },
     { href: "/upload", label: t("nav.upload"), icon: "upload" },
     { href: "/library", label: t("nav.library"), icon: "library" },
+    { href: "/orders", label: t("nav.orders"), icon: "ticket" },
     { href: "/support", label: t("nav.support"), icon: "support" },
   ];
 }

@@ -45,9 +45,14 @@ export function MarketTopBar({ user }: { user: User }) {
             {t("shell.charts")}
           </Link>
           {user ? (
-            <Link href="/library" className="rounded-xl px-2.5 py-1.5 hover:bg-white/5 hover:text-foreground">
-              {t("shell.library")}
-            </Link>
+            <>
+              <Link href="/library" className="rounded-xl px-2.5 py-1.5 hover:bg-white/5 hover:text-foreground">
+                {t("shell.library")}
+              </Link>
+              <Link href="/orders" className="rounded-xl px-2.5 py-1.5 hover:bg-white/5 hover:text-foreground">
+                {t("shell.orders")}
+              </Link>
+            </>
           ) : null}
         </nav>
         <div className="ml-auto flex items-center gap-2">
