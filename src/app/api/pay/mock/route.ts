@@ -14,13 +14,41 @@ const schema = z.object({
   fail: z.boolean().optional(),
 });
 
+function notFound() {
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
+}
+
+/**
+ * Soft-launch CoS: every method returns 404 when mocks are disabled
+ * (production / ALLOW_PAYMENT_MOCKS!=="true"). Avoids Next.js default 405
+ * on OPTIONS/GET/etc. that leak that the route exists.
+ */
+export async function GET() {
+  return notFound();
+}
+export async function HEAD() {
+  return notFound();
+}
+export async function OPTIONS() {
+  return notFound();
+}
+export async function PUT() {
+  return notFound();
+}
+export async function PATCH() {
+  return notFound();
+}
+export async function DELETE() {
+  return notFound();
+}
+
 /**
  * Mock MoMo/VNPay/CK: marks pending, then POSTs signed webhook stub to unlock.
  * Disabled when NODE_ENV===production or ALLOW_PAYMENT_MOCKS!=="true".
  */
 export async function POST(req: NextRequest) {
   if (!allowPaymentMocks()) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return notFound();
   }
 
   const user = await requireUser();
