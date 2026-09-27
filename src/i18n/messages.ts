@@ -153,6 +153,8 @@ export const vi = {
     showPassword: "Hiện mật khẩu",
     hidePassword: "Ẩn mật khẩu",
     noAccount: "Chưa có tài khoản?",
+    alreadyIn: "Bạn đang đăng nhập với {name} ({email}).",
+    continueAs: "Tiếp tục",
   },
   signup: {
     title: "Đăng ký",
@@ -545,6 +547,8 @@ export const en: Messages = {
     showPassword: "Show password",
     hidePassword: "Hide password",
     noAccount: "No account yet?",
+    alreadyIn: "Signed in as {name} ({email}).",
+    continueAs: "Continue",
   },
   signup: {
     title: "Sign up",
