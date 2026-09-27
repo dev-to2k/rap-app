@@ -16,7 +16,7 @@ type Beat = {
   status: string;
 };
 
-export function BuyPanel({ beat }: { beat: Beat }) {
+export function BuyPanel({ beat, isGuest = false }: { beat: Beat; isGuest?: boolean }) {
   const t = useT();
   const router = useRouter();
   const [sku, setSku] = useState<"lease" | "wav" | "exclusive">("lease");
@@ -77,6 +77,8 @@ export function BuyPanel({ beat }: { beat: Beat }) {
     return <Alert variant="info">{t("buy.soldExclusive")}</Alert>;
   }
 
+  const ctaLabel =
+    sku === "lease" ? t("buy.ctaLeaseViaMarket") : t("buy.ctaMomo");
   const ctaInner = loading ? (
     <span className="inline-flex items-center gap-2">
       <Spinner /> {t("buy.creating")}
@@ -84,7 +86,7 @@ export function BuyPanel({ beat }: { beat: Beat }) {
   ) : (
     <>
       <Icon name="wallet" size="sm" />
-      {t("buy.ctaMomo")}
+      {ctaLabel}
     </>
   );
 
@@ -119,6 +121,9 @@ export function BuyPanel({ beat }: { beat: Beat }) {
 
       {/* Hint only — primary CTA lives in viewport-fixed StickyBar (mobile ~480 + desktop). */}
       <p className="text-center text-xs text-muted md:text-left">{t("buy.ctaHint", { price: formatVnd(price) })}</p>
+      {isGuest ? (
+        <p className="text-center text-xs text-muted md:text-left">{t("buy.guestLoginHint")}</p>
+      ) : null}
 
       <StickyBar>
         <div className="flex items-center gap-3">
