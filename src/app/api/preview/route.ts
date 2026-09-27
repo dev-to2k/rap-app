@@ -1,16 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import { resolvePreviewMp3 } from "@/lib/preview-audio";
+import { prisma } from "@/lib/prisma";
 import {
   getPresignedGetUrl,
   isR2Configured,
   parseR2Marker,
 } from "@/lib/r2";
 
-/** Preview: local storage/audio/*.mp3 OR r2: marker → short-lived signed redirect */
+/** cuid-ish ids from Prisma @default(cuid()) */
+const BEAT_ID_RE = /^[a-z0-9]{20,40}$/i;
+
+/**
+ * Preview: local storage/audio/*.mp3 OR r2: marker → short-lived signed redirect.
+ * Prefer `path` (Beat.audioUrl). Fallback: `beatId` → lookup audioUrl.
+ */
 export async function GET(req: NextRequest) {
-  const p = req.nextUrl.searchParams.get("path");
-  if (!p) return NextResponse.json({ error: "bad path" }, { status: 400 });
+  let p = req.nextUrl.searchParams.get("path");
+
+  if (!p) {
+    const beatId = req.nextUrl.searchParams.get("beatId");
+    if (!beatId || !BEAT_ID_RE.test(beatId)) {
+      return NextResponse.json({ error: "bad path" }, { status: 400 });
+    }
+    const beat = await prisma.beat.findUnique({
+      where: { id: beatId },
+      select: { audioUrl: true },
+    });
+    if (!beat?.audioUrl) {
+      return NextResponse.json({ error: "missing" }, { status: 404 });
+    }
+    p = beat.audioUrl;
+  }
 
   const r2Key = parseR2Marker(p);
   if (r2Key) {
