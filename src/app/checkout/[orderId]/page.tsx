@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import { Alert, Button, Card, Container, PageHeader, Price, Skeleton, Spinner, Stepper } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
+import { buildMomoCkQrPayload } from "@/lib/momo-ck-qr";
 
 type Order = {
   id: string;
@@ -236,6 +238,16 @@ export default function CheckoutPage() {
   const pendingConfirm = order?.status === "pending_confirm";
   const unlocked = order?.status === "unlocked" || order?.status === "paid";
   const awaiting = order ? AWAITING.has(order.status) || pendingConfirm : true;
+  // Encode only when phone + amount + transferContent are present (no broken QR).
+  const ckQrPayload = useMemo(
+    () =>
+      buildMomoCkQrPayload({
+        phone,
+        amountVnd: amount,
+        transferContent: payment?.transferContent || "",
+      }),
+    [phone, amount, payment?.transferContent],
+  );
   const isFailed = order?.status === "failed";
   const payosConfigured = Boolean(payment?.payosConfigured);
   const payos = payosLive || payment?.payos || null;
@@ -333,6 +345,20 @@ export default function CheckoutPage() {
           <p className="font-medium">
             {payosConfigured ? t("checkout.ckRailTitle") : t("checkout.ckTitle")}
           </p>
+          {awaiting && ckQrPayload ? (
+            <div className="flex flex-col items-center gap-2 py-1">
+              <div className="rounded-lg bg-white p-3">
+                <QRCodeSVG
+                  value={ckQrPayload}
+                  size={180}
+                  level="M"
+                  className="h-[180px] w-[180px] min-h-[180px] min-w-[180px]"
+                  aria-label={t("checkout.ckQrAlt")}
+                />
+              </div>
+              <p className="max-w-xs text-center text-xs text-muted">{t("checkout.ckQrCaption")}</p>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs text-muted">{t("checkout.ckPhone")}</p>
