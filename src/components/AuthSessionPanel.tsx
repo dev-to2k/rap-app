@@ -17,7 +17,12 @@ export function AuthSessionPanel({
   mode: "login" | "signup";
 }) {
   const t = useT();
-  const logoutNext = mode === "signup" ? "/signup" : "/login";
+  const authBase = mode === "signup" ? "/signup" : "/login";
+  const deepNext =
+    next && next !== "/" && next !== "/login" && next !== "/signup";
+  const logoutNext = deepNext
+    ? `${authBase}?next=${encodeURIComponent(next)}`
+    : authBase;
   const continueHref = next && next !== "/" ? next : "/";
   return (
     <Card className="space-y-3 p-6">

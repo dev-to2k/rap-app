@@ -190,6 +190,8 @@ export const vi = {
     checkoutFailed: "Không thanh toán được",
     retry: "Thử lại",
     noOrder: "Không tạo được đơn",
+    noPendingBuy: "Không có đơn đang chờ — chọn beat trên chợ để tiếp tục.",
+    backHome: "← Về chợ beat",
   },
   checkout: {
     title: "Thanh toán",
@@ -584,6 +586,8 @@ export const en: Messages = {
     checkoutFailed: "Checkout failed",
     retry: "Try again",
     noOrder: "Could not create order",
+    noPendingBuy: "No pending purchase — pick a beat on the store to continue.",
+    backHome: "← Back to the store",
   },
   checkout: {
     title: "Checkout",

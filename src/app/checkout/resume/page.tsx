@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Container, Spinner } from "@/kit";
+import Link from "next/link";
+import { Button, Container, Spinner, buttonClass } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { clearPendingBuy, getPendingBuy, setPendingBuy, type PendingBuy } from "@/lib/pending-buy";
 
@@ -12,6 +13,7 @@ export default function CheckoutResumePage() {
   const [msg, setMsg] = useState(t("buy.creating"));
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [noIntent, setNoIntent] = useState(false);
 
   const runCheckout = useCallback(
     async (intent: PendingBuy) => {
@@ -53,16 +55,21 @@ export default function CheckoutResumePage() {
   useEffect(() => {
     const intent = getPendingBuy();
     if (!intent) {
-      router.replace("/");
+      setNoIntent(true);
+      setLoading(false);
+      setMsg(t("buy.noPendingBuy"));
       return;
     }
     void runCheckout(intent);
-  }, [router, runCheckout]);
+  }, [runCheckout, t]);
 
   function onRetry() {
     const intent = getPendingBuy();
     if (!intent) {
-      router.replace("/");
+      setNoIntent(true);
+      setLoading(false);
+      setFailed(false);
+      setMsg(t("buy.noPendingBuy"));
       return;
     }
     void runCheckout(intent);
@@ -71,11 +78,16 @@ export default function CheckoutResumePage() {
   return (
     <Container className="flex flex-col items-center gap-3 py-20 text-sm text-muted">
       {loading ? <Spinner /> : null}
-      <p role={failed ? "alert" : undefined}>{msg}</p>
+      <p role={failed || noIntent ? "alert" : undefined}>{msg}</p>
       {failed ? (
         <Button className="rounded-full" onClick={onRetry}>
           {t("buy.retry")}
         </Button>
+      ) : null}
+      {noIntent ? (
+        <Link href="/" className={buttonClass({ className: "rounded-full" })}>
+          {t("buy.backHome")}
+        </Link>
       ) : null}
     </Container>
   );
