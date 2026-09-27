@@ -1,16 +1,22 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { MarketTopBar } from "./MarketTopBar";
 import { MobileTabBar } from "./MobileTabBar";
-import { MiniPlayer } from "./MiniPlayer";
 import { STUDIO_ITEMS, StudioSidebar } from "./StudioSidebar";
 import { SiteFooter } from "./SiteFooter";
 import { LocaleSwitch } from "./LocaleSwitch";
 import Link from "next/link";
 import { Icon, cn } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
+
+/** Mini player is unused until first play — keep it out of the initial market/home chunk. */
+const MiniPlayer = dynamic(
+  () => import("./MiniPlayer").then((m) => ({ default: m.MiniPlayer })),
+  { ssr: false },
+);
 
 type User = { name: string; role: string } | null;
 

@@ -18,11 +18,12 @@ export function BeatPlayer({
   audioUrl: string;
 }) {
   const t = useT();
-  const audioSrc = audioUrl ? `/api/preview?path=${encodeURIComponent(audioUrl)}` : "";
   const { toggle, nowPlaying, playing } = useAudioPlayback();
   const isThis = nowPlaying?.id === id && playing;
 
   function onPlay() {
+    // Preview URL only when the user hits play — no auto-fetch on detail paint.
+    const audioSrc = audioUrl ? `/api/preview?path=${encodeURIComponent(audioUrl)}` : "";
     toggle({
       id,
       title,
@@ -35,7 +36,13 @@ export function BeatPlayer({
 
   return (
     <div className="relative mb-5 aspect-square w-full overflow-hidden rounded-lg bg-surface-2">
-      <CoverArt src={coverUrl || "/covers/beat1.svg"} alt={title} className="h-full w-full" />
+      <CoverArt
+        src={coverUrl || "/covers/beat1.svg"}
+        alt={title}
+        className="h-full w-full"
+        priority
+        sizes="(max-width: 1024px) 100vw, 50vw"
+      />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent p-4 pt-20">
         <div className="flex items-center gap-3">
           <PlayButton

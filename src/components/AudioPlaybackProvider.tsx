@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -29,28 +30,56 @@ type AudioPlaybackContextValue = {
 
 const AudioPlaybackContext = createContext<AudioPlaybackContextValue | null>(null);
 
+/**
+ * Single shared preview player. Audio element is created only on first play
+ * (preload=none) so the home catalog never fetches preview bytes up front.
+ */
 export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
   const [playing, setPlaying] = useState(false);
+
+  const getAudio = useCallback(() => {
+    if (!audioRef.current) {
+      const el = new Audio();
+      el.preload = "none";
+      el.addEventListener("ended", () => setPlaying(false));
+      audioRef.current = el;
+    }
+    return audioRef.current;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+      audioRef.current = null;
+    };
+  }, []);
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
     setPlaying(false);
   }, []);
 
-  const play = useCallback((track: NowPlaying) => {
-    const el = audioRef.current;
-    if (!el || !track.audioSrc) return;
-    if (nowPlaying?.id !== track.id) {
-      el.src = track.audioSrc;
-      setNowPlaying(track);
-    }
-    void el
-      .play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false));
-  }, [nowPlaying?.id]);
+  const play = useCallback(
+    (track: NowPlaying) => {
+      if (!track.audioSrc) return;
+      const el = getAudio();
+      if (nowPlaying?.id !== track.id) {
+        el.src = track.audioSrc;
+        setNowPlaying(track);
+      }
+      void el
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    },
+    [getAudio, nowPlaying?.id],
+  );
 
   const toggle = useCallback(
     (track: NowPlaying) => {
@@ -65,12 +94,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
     [nowPlaying, playing, play, pause, toggle],
   );
 
-  return (
-    <AudioPlaybackContext.Provider value={value}>
-      <audio ref={audioRef} preload="none" onEnded={() => setPlaying(false)} />
-      {children}
-    </AudioPlaybackContext.Provider>
-  );
+  return <AudioPlaybackContext.Provider value={value}>{children}</AudioPlaybackContext.Provider>;
 }
 
 export function useAudioPlayback() {

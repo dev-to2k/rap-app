@@ -1,12 +1,22 @@
+import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { BuyPanel } from "@/components/BuyPanel";
 import { BeatPlayer } from "@/components/BeatPlayer";
 import { Badge, Card, Container, Icon } from "@/kit";
 import { getT } from "@/i18n/get-locale";
 
 export const dynamic = "force-dynamic";
+
+/** Buy panel is client-heavy (checkout flow) — split off the detail hero chunk. */
+const BuyPanel = nextDynamic(
+  () => import("@/components/BuyPanel").then((m) => ({ default: m.BuyPanel })),
+  {
+    loading: () => (
+      <div className="h-48 animate-pulse rounded-lg bg-surface-2" aria-hidden />
+    ),
+  },
+);
 
 export default async function BeatDetailPage({ params }: { params: { id: string } }) {
   const t = getT();
