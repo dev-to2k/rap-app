@@ -431,10 +431,9 @@ export const vi = {
     catalog: "← Danh mục",
   },
   beat: {
-    notFoundTitle: "Không tìm thấy beat",
-    notFoundDescription:
-      "Beat này không tồn tại, đã bị gỡ hoặc link không đúng. Quay lại chợ để chọn beat khác.",
-    backExplore: "Về khám phá",
+    notFoundTitle: "Beat này không còn trên sàn",
+    notFoundDescription: "Có thể đã gỡ hoặc đường link không đúng.",
+    backHome: "Về trang chủ",
   },
 } as const;
 
@@ -877,10 +876,9 @@ export const en: Messages = {
     catalog: "← Catalog",
   },
   beat: {
-    notFoundTitle: "Beat not found",
-    notFoundDescription:
-      "This beat does not exist, was removed, or the link is wrong. Head back to explore other beats.",
-    backExplore: "Back to explore",
+    notFoundTitle: "This beat is no longer on the marketplace",
+    notFoundDescription: "It may have been removed, or the link is wrong.",
+    backHome: "Back to home",
   },
 };
 
