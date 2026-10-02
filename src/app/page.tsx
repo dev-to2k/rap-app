@@ -1,4 +1,5 @@
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
+import { publicCatalogWhere } from "@/lib/catalog";
 import { Alert, Container } from "@/kit";
 import { MarketplaceHome } from "@/components/MarketplaceHome";
 import { getT } from "@/i18n/get-locale";
@@ -26,7 +27,7 @@ export default async function HomePage({ searchParams }: { searchParams: { q?: s
   if (!dbUnavailable) {
     try {
       beats = await prisma.beat.findMany({
-        where: { status: "available" },
+        where: publicCatalogWhere(),
         include: { producer: { select: { name: true } } },
         orderBy: { createdAt: "desc" },
       });
