@@ -261,9 +261,6 @@ export default function CheckoutPage({ showPayosNotConfigured }: CheckoutClientP
                   {t("checkout.payosOpen")}
                 </Button>
                 <p className="text-xs text-muted">{t("checkout.payosWaiting")}</p>
-                {payos.qrCode ? (
-                  <p className="break-all font-mono text-[10px] text-muted">{payos.qrCode}</p>
-                ) : null}
                 {awaiting && !isFailed ? (
                   <Button
                     type="button"
@@ -288,10 +285,6 @@ export default function CheckoutPage({ showPayosNotConfigured }: CheckoutClientP
         <p className="text-xs text-muted">{t("checkout.platformNote")}</p>
         <p className="text-xs text-muted">{t("checkout.buyerTrust")}</p>
         <p className="text-[11px] leading-relaxed text-muted">{t("checkout.legalNotice")}</p>
-
-        {pendingConfirm ? (
-          <Alert variant="info">{t("checkout.pendingConfirmBanner")}</Alert>
-        ) : null}
 
         {isFailed ? (
           <Alert variant="danger" role="alert">

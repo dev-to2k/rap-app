@@ -30,8 +30,8 @@ function statusBadgeVariant(status: string): "warning" | "accent" | "default" {
 }
 
 function statusLabel(status: string): string {
-  if (status === "pending_confirm") return "Chờ xác nhận CK";
-  if (status === "pending_ck") return "Chờ chuyển CK";
+  if (status === "pending_confirm") return "Đang xử lý";
+  if (status === "pending_ck") return "Chờ thanh toán";
   return status;
 }
 
@@ -106,8 +106,8 @@ export function AdminConfirmOrders() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-8">
       <PageHeader
-        title="Chờ xác nhận CK"
-        description="Danh sách pending_confirm + pending_ck. Xác nhận → paid → unlock PDF."
+        title="Đơn chờ xử lý"
+        description="Đơn đang chờ xử lý thanh toán."
         icon="ticket"
         action={
           <Button variant="secondary" size="sm" onClick={() => void load()} disabled={loading || !!busyId}>
@@ -140,8 +140,8 @@ export function AdminConfirmOrders() {
       ) : orders.length === 0 && !error ? (
         <EmptyState
           icon="ticket"
-          title="Không có đơn chờ CK"
-          description="Khi buyer báo đã chuyển khoản, đơn hiện ở đây."
+          title="Không có đơn chờ xử lý"
+          description="Khi có đơn chờ xử lý, đơn hiện ở đây."
         />
       ) : (
         <ul className="space-y-3">
