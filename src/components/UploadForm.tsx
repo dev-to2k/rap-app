@@ -147,6 +147,7 @@ export function UploadForm() {
     setError("");
     const fd = new FormData();
     fd.set("file", master);
+    if (preview) fd.set("preview", preview);
     fd.set("title", meta.title);
     fd.set("bpm", meta.bpm);
     fd.set("musicalKey", meta.musicalKey);
@@ -155,10 +156,20 @@ export function UploadForm() {
     fd.set("priceWav", meta.priceWav.replace(/\D/g, ""));
     fd.set("priceExclusive", meta.priceExclusive.replace(/\D/g, ""));
     const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) {
-      setError(typeof data.error === "string" ? data.error : t("upload.failed"));
+      const code = typeof data.error === "string" ? data.error : "";
+      const known: Record<string, string> = {
+        auth: t("upload.needProducer"),
+        producer_only: t("upload.needProducer"),
+        missing_file: t("upload.missingMaster"),
+        missing_title: t("upload.fieldTitle"),
+        bad_file: t("upload.badFile"),
+        need_preview_mp3: t("upload.needPreviewMp3"),
+        store_failed: t("upload.failed"),
+      };
+      setError(known[code] || t("upload.failed"));
       return;
     }
     router.push(`/studio/catalog`);
