@@ -5,6 +5,7 @@ import Link from "next/link";
 import { buttonClass, Checkbox, Chip, Container, EmptyState } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { BEAT_TAGS, mockPlays, tagForTitle, type BeatTag } from "@/lib/beat-tags";
+import { exclusiveSampleIsClean } from "@/lib/exclusive-sample";
 import { BeatCard } from "./BeatCard";
 
 export type CatalogBeat = {
@@ -43,7 +44,7 @@ export function MarketplaceHome({
         b.title.toLowerCase().includes(q) ||
         b.producer.name.toLowerCase().includes(q) ||
         String(b.bpm).includes(q);
-      const hitEx = !exclusiveOnly || b.sampleFlag !== "uncleared";
+      const hitEx = !exclusiveOnly || exclusiveSampleIsClean(b.sampleFlag);
       return hitTag && hitQ && hitEx;
     });
     if (sort === "price") list = [...list].sort((a, b) => a.priceLease - b.priceLease);

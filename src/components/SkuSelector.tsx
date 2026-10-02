@@ -2,6 +2,7 @@
 
 import { cn, Price } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
+import { exclusiveSampleIsClean } from "@/lib/exclusive-sample";
 
 const SKUS = ["lease", "wav", "exclusive"] as const;
 
@@ -19,7 +20,8 @@ export function SkuSelector({
   status: string;
 }) {
   const t = useT();
-  const exclusiveDisabled = sampleFlag === "uncleared" || status !== "available";
+  const exclusiveBlocked = !exclusiveSampleIsClean(sampleFlag);
+  const exclusiveDisabled = exclusiveBlocked || status !== "available";
   const hints = {
     lease: t("buy.hintLease"),
     wav: t("buy.hintWav"),
@@ -56,7 +58,7 @@ export function SkuSelector({
                 className={s === "exclusive" ? "text-exclusive" : undefined}
               />
             </div>
-            {s === "exclusive" && sampleFlag === "uncleared" ? (
+            {s === "exclusive" && exclusiveBlocked ? (
               <p className="mt-1 text-xs text-warning">{t("buy.exclusiveUncleared")}</p>
             ) : (
               <p className="mt-1 text-xs text-muted">{hints[s]}</p>

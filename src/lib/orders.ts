@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { getEffectiveTakeRateBps } from "./take-rate";
 import { computeOrderLedger } from "./ledger";
 import { isPayosConfigured } from "./payos";
+import { exclusiveSampleIsClean } from "./exclusive-sample";
 
 export class OrderError extends Error {
   code: string;
@@ -31,7 +32,8 @@ export async function createMarketplaceOrder(input: {
   return prisma.$transaction(async (tx) => {
     const beat = await tx.beat.findUnique({ where: { id: input.beatId } });
     if (!beat) throw new OrderError("BEAT_UNAVAILABLE", "Beat không còn bán");
-    if (input.sku === "exclusive" && beat.sampleFlag === "uncleared") {
+    // Block before reserve / payable order. Anything other than exact "clean" is refused.
+    if (input.sku === "exclusive" && !exclusiveSampleIsClean(beat.sampleFlag)) {
       throw new OrderError("EXCLUSIVE_FORBIDDEN_UNCLEARED", "Không bán Exclusive khi sample chưa clear");
     }
 

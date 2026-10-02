@@ -6,6 +6,7 @@ import { formatVnd } from "@/lib/config";
 import { Alert, Button, Icon, Price, Spinner, Stepper, StickyBar, StickyBarSpacer } from "@/kit";
 import { SkuSelector } from "./SkuSelector";
 import { useT } from "@/i18n/I18nProvider";
+import { exclusiveSampleIsClean } from "@/lib/exclusive-sample";
 
 type Beat = {
   id: string;
@@ -23,7 +24,8 @@ export function BuyPanel({ beat, isGuest = false }: { beat: Beat; isGuest?: bool
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const exclusiveDisabled = beat.sampleFlag === "uncleared" || beat.status !== "available";
+  const exclusiveBlocked = !exclusiveSampleIsClean(beat.sampleFlag);
+  const exclusiveDisabled = exclusiveBlocked || beat.status !== "available";
   const soldExclusive = beat.status === "sold_exclusive";
   const price =
     sku === "lease" ? beat.priceLease : sku === "wav" ? beat.priceWav : beat.priceExclusive;
@@ -32,7 +34,7 @@ export function BuyPanel({ beat, isGuest = false }: { beat: Beat; isGuest?: bool
 
   async function checkout() {
     setError("");
-    if (sku === "exclusive" && beat.sampleFlag === "uncleared") {
+    if (sku === "exclusive" && exclusiveBlocked) {
       setError(t("buy.unclearedAlert"));
       return;
     }
@@ -107,10 +109,10 @@ export function BuyPanel({ beat, isGuest = false }: { beat: Beat; isGuest?: bool
         sampleFlag={beat.sampleFlag}
         status={beat.status}
       />
-      {sku === "exclusive" && beat.sampleFlag !== "uncleared" ? (
+      {sku === "exclusive" && !exclusiveBlocked ? (
         <p className="text-xs text-muted">{t("buy.exclusiveNote")}</p>
       ) : null}
-      {beat.sampleFlag === "uncleared" ? (
+      {exclusiveBlocked ? (
         <Alert variant="warning">{t("buy.unclearedAlert")}</Alert>
       ) : null}
       {error ? (
