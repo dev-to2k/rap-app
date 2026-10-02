@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { isSeedCatalogBeat } from "@/lib/seed-catalog";
 import { BeatPlayer } from "@/components/BeatPlayer";
 import { Badge, Card, Container, Icon } from "@/kit";
 import { getT } from "@/i18n/get-locale";
@@ -24,9 +25,9 @@ export default async function BeatDetailPage({ params }: { params: { id: string 
   const session = await getSession();
   const beat = await prisma.beat.findUnique({
     where: { id: params.id },
-    include: { producer: { select: { name: true } } },
+    include: { producer: { select: { name: true, email: true } } },
   });
-  if (!beat) notFound();
+  if (!beat || isSeedCatalogBeat(beat)) notFound();
 
   return (
     <Container className="space-y-6 py-5 fade-in">

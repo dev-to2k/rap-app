@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { isProductionSeedBlocked } from "../src/lib/seed-catalog";
 
 /** Demo seed uses local storage/audio. Prod Seed must configure R2_* for signed downloads. */
 import bcrypt from "bcryptjs";
@@ -22,6 +23,11 @@ async function ensurePlaceholderAudio() {
 }
 
 async function main() {
+  if (isProductionSeedBlocked()) {
+    console.error("Refusing to seed catalog: production runtime.");
+    process.exit(1);
+  }
+
   await ensurePlaceholderAudio();
 
   await prisma.waitlistSignup.deleteMany();
