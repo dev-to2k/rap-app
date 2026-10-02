@@ -112,7 +112,6 @@ export const vi = {
     title: "Beat đang bán",
     description: "MP3 nghe thử / WAV làm bài / độc quyền giữ một mình — giá đồng Việt, giấy phép rõ.",
     emptyTitle: "Chưa có beat nào",
-    emptyDescription: "Đừng nhắn tin hỏi beat nữa — chọn gói, trả MoMo, nhận PDF và file.",
     heroEyebrow: "Sàn trung gian hai bên",
     heroTitle: "Nghe thử. Chọn gói. Nhận giấy phép.",
     heroBody:
@@ -559,7 +558,6 @@ export const en: Messages = {
     title: "Beats for sale",
     description: "MP3 to preview / WAV to work / exclusive to keep — VND pricing, clear licenses.",
     emptyTitle: "No beats yet",
-    emptyDescription: "Don't DM for beats — pick a plan, pay MoMo, get PDF and files.",
     heroEyebrow: "Two-sided marketplace",
     heroTitle: "Preview. Pick a plan. Get the license.",
     heroBody:
