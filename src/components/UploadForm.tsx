@@ -218,7 +218,7 @@ export function UploadForm() {
   ];
 
   return (
-    <div className="space-y-8 pb-28">
+    <div className="space-y-8 pb-4">
       <Stepper current={stepCurrent} labels={[t("steps.audio"), t("steps.meta"), t("steps.price")]} />
       {warn ? (
         <Alert variant="warning" role="alert">
@@ -228,7 +228,7 @@ export function UploadForm() {
       {draftMsg ? <Alert variant="info">{draftMsg}</Alert> : null}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">{t("upload.audio")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="hidden gap-3 sm:grid sm:grid-cols-2 xl:grid-cols-4">
           <FileDrop
             label={t("upload.master")}
             hint={t("upload.masterHint")}
@@ -258,6 +258,42 @@ export function UploadForm() {
             onFile={(f) => pickFile("cover", f)}
           />
         </div>
+        <div className="grid gap-3 sm:hidden">
+          <FileDrop
+            label={t("upload.master")}
+            hint={t("upload.masterHint")}
+            accept="audio/wav,audio/mpeg,.wav,.mp3"
+            file={master}
+            onFile={(f) => pickFile("master", f)}
+          />
+          <Field label={t("upload.fieldTitle")}>
+            <Input value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
+          </Field>
+          <details className="grid gap-3">
+            <summary className="cursor-pointer text-sm font-medium">{t("upload.moreFiles")}</summary>
+            <FileDrop
+              label={t("upload.preview")}
+              hint={t("upload.previewHint")}
+              accept="audio/mpeg,.mp3"
+              file={preview}
+              onFile={(f) => pickFile("preview", f)}
+            />
+            <FileDrop
+              label={t("upload.stems")}
+              hint={t("upload.stemsHint")}
+              accept=".zip,application/zip"
+              file={stems}
+              onFile={(f) => pickFile("stems", f)}
+            />
+            <FileDrop
+              label={t("upload.cover")}
+              hint={t("upload.coverHint")}
+              accept="image/*"
+              file={cover}
+              onFile={(f) => pickFile("cover", f)}
+            />
+          </details>
+        </div>
         {masterUrl ? (
           <div className="space-y-1">
             <p className="text-xs text-muted">{t("upload.previewAudio")}</p>
@@ -284,9 +320,11 @@ export function UploadForm() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">{t("upload.meta")}</h2>
         <Card className="grid gap-4 p-5 md:grid-cols-2">
-          <Field label={t("upload.fieldTitle")}>
-            <Input value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
-          </Field>
+          <div className="hidden sm:block">
+            <Field label={t("upload.fieldTitle")}>
+              <Input value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
+            </Field>
+          </div>
           <Field label={t("upload.typeBeat")}>
             <Select value={meta.typeBeat} onChange={(e) => setMeta({ ...meta, typeBeat: e.target.value })}>
               <option value="trap">Trap</option>
@@ -357,7 +395,7 @@ export function UploadForm() {
         <div className="grid gap-3">
           {licenses.map((row) => (
             <Card key={row.key} className={`p-4 ${row.locked ? "opacity-60" : ""}`}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <Checkbox
                   name={row.key}
                   checked={row.checked}
@@ -371,13 +409,15 @@ export function UploadForm() {
                 >
                   {row.label}
                 </Checkbox>
-                <CurrencyInput
-                  name={row.priceKey}
-                  value={meta[row.priceKey]}
-                  disabled={row.locked}
-                  onChange={(e) => setMeta({ ...meta, [row.priceKey]: e.target.value })}
-                  className="w-40"
-                />
+                <div className="w-full sm:w-40">
+                  <CurrencyInput
+                    name={row.priceKey}
+                    value={meta[row.priceKey]}
+                    disabled={row.locked}
+                    onChange={(e) => setMeta({ ...meta, [row.priceKey]: e.target.value })}
+                    className="w-full"
+                  />
+                </div>
               </div>
               <p className="mt-1 text-xs text-muted">{row.rights}</p>
               {row.note ? <p className="mt-1 text-xs text-warning">{row.note}</p> : null}
@@ -395,22 +435,31 @@ export function UploadForm() {
         ) : null}
       </section>
 
-      <div className="sticky bottom-4 z-20 flex flex-wrap justify-end gap-2 rounded-lg border border-border bg-background/95 p-3 backdrop-blur">
-        <Button variant="ghost" onClick={() => router.push("/studio/catalog")}>
-          {t("upload.cancel")}
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setError("");
-            setDraftMsg(t("upload.draftSaved"));
-          }}
-        >
-          {t("upload.saveDraft")}
-        </Button>
-        <Button disabled={!canPublish} onClick={() => void publish()}>
-          {busy ? t("upload.publishing") : t("upload.publish")}
-        </Button>
+      <div className="sticky bottom-0 z-20 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-lg sm:border sm:px-3">
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            className="text-sm font-medium text-muted underline-offset-2 hover:text-foreground hover:underline"
+            onClick={() => router.push("/studio/catalog")}
+          >
+            {t("upload.cancel")}
+          </button>
+          <button
+            type="button"
+            className="text-sm font-medium text-muted underline-offset-2 hover:text-foreground hover:underline"
+            onClick={() => {
+              setError("");
+              setDraftMsg(t("upload.draftSaved"));
+            }}
+          >
+            {t("upload.saveDraft")}
+          </button>
+        </div>
+        <div className="sm:flex sm:justify-end">
+          <Button className="w-full sm:w-auto sm:min-w-[12rem]" disabled={!canPublish} onClick={() => void publish()}>
+            {busy ? t("upload.publishing") : t("upload.publish")}
+          </Button>
+        </div>
       </div>
     </div>
   );
