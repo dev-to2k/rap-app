@@ -12,6 +12,10 @@
  * appear on the public catalog. Empty catalog is OK.
  */
 
+import { SEED_BEAT_IDS } from "@/lib/seed-catalog";
+
+export { SEED_BEAT_IDS };
+
 export const SEED_PRODUCER_EMAILS = ["producer@rap.app", "minhprod@rap.app"] as const;
 
 export const SEED_AUDIO_URLS = [
@@ -24,8 +28,10 @@ export const SEED_AUDIO_URLS = [
 
 const seedEmails = new Set<string>(SEED_PRODUCER_EMAILS);
 const seedAudio = new Set<string>(SEED_AUDIO_URLS);
+const seedIds = new Set<string>(SEED_BEAT_IDS);
 
-export function isSeedCatalogBeat(beat: { audioUrl: string; producerEmail: string }): boolean {
+export function isSeedCatalogBeat(beat: { audioUrl: string; producerEmail: string; id?: string }): boolean {
+  if (beat.id && seedIds.has(beat.id)) return true;
   return seedEmails.has(beat.producerEmail.toLowerCase()) || seedAudio.has(beat.audioUrl);
 }
 
@@ -34,6 +40,7 @@ export function publicCatalogWhere(q?: string) {
   const query = q?.trim() || "";
   return {
     status: "available" as const,
+    id: { notIn: [...SEED_BEAT_IDS] },
     producer: { email: { notIn: [...SEED_PRODUCER_EMAILS] } },
     audioUrl: { notIn: [...SEED_AUDIO_URLS] },
     ...(query
