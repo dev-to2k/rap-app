@@ -8,6 +8,7 @@ export default async function StudioUploadPage() {
   const user = await getSession();
   const t = getT();
   if (!user) redirect("/login?next=/studio/upload");
+  if (user.role === "buyer") redirect("/api/auth/become-producer?next=/studio/upload");
   const canPublish = user.role === "producer" || user.role === "admin";
   return (
     <Container className="max-w-5xl py-8">

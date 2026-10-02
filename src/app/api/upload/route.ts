@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, requireUser } from "@/lib/auth";
+import { applySessionCookie, getSession, requireUser } from "@/lib/auth";
+import { promoteBuyerToProducer } from "@/lib/promote-producer";
 import fs from "fs";
 import path from "path";
 import { beatAssetKey, isR2Configured, putObject, toR2Marker } from "@/lib/r2";
@@ -66,8 +67,13 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "auth" }, { status: 401 });
 
+  const promoted = await promoteBuyerToProducer(session.id);
+  if (!promoted) return NextResponse.json({ error: "auth" }, { status: 401 });
+  const stamp = (res: NextResponse) =>
+    promoted.role !== session.role ? applySessionCookie(res, promoted) : res;
+
   const user = await requireUser(["producer", "admin"]);
-  if (!user) return NextResponse.json({ error: "producer_only" }, { status: 403 });
+  if (!user) return stamp(NextResponse.json({ error: "producer_only" }, { status: 403 }));
 
   const form = await req.formData();
   const title = String(form.get("title") || "").trim();
@@ -80,23 +86,23 @@ export async function POST(req: NextRequest) {
   const master = form.get("file");
   const preview = form.get("preview");
 
-  if (!title) return NextResponse.json({ error: "missing_title" }, { status: 400 });
+  if (!title) return stamp(NextResponse.json({ error: "missing_title" }, { status: 400 }));
   if (!(master instanceof File) || master.size === 0) {
-    return NextResponse.json({ error: "missing_file" }, { status: 400 });
+    return stamp(NextResponse.json({ error: "missing_file" }, { status: 400 }));
   }
   if (!audioOk(master)) {
-    return NextResponse.json({ error: "bad_file" }, { status: 400 });
+    return stamp(NextResponse.json({ error: "bad_file" }, { status: 400 }));
   }
 
   const previewFile = preview instanceof File && preview.size > 0 ? preview : null;
   if (previewFile && !isMp3(previewFile)) {
-    return NextResponse.json({ error: "bad_file" }, { status: 400 });
+    return stamp(NextResponse.json({ error: "bad_file" }, { status: 400 }));
   }
 
   // Home player only streams mp3 (local storage/audio or r2:*.mp3).
   const catalogFile = previewFile ?? (isMp3(master) ? master : null);
   if (!catalogFile) {
-    return NextResponse.json({ error: "need_preview_mp3" }, { status: 400 });
+    return stamp(NextResponse.json({ error: "need_preview_mp3" }, { status: 400 }));
   }
 
   const catalogBuf = Buffer.from(await catalogFile.arrayBuffer());
@@ -138,10 +144,10 @@ export async function POST(req: NextRequest) {
       })
       .catch(() => undefined);
 
-    return NextResponse.json({ beat: published });
+    return stamp(NextResponse.json({ beat: published }));
   } catch (err) {
     await prisma.beat.delete({ where: { id: beat.id } }).catch(() => undefined);
     console.error("upload_store_failed", beat.id, err instanceof Error ? err.message : "error");
-    return NextResponse.json({ error: "store_failed" }, { status: 500 });
+    return stamp(NextResponse.json({ error: "store_failed" }, { status: 500 }));
   }
 }
