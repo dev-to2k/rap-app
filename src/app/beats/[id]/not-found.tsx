@@ -14,7 +14,7 @@ export default function BeatNotFound() {
         action={
           <Link href="/" className={buttonClass({ className: "rounded-full" })}>
             <Icon name="back" size="sm" />
-            {t("beat.backExplore")}
+            {t("beat.backHome")}
           </Link>
         }
       />
