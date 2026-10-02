@@ -112,7 +112,6 @@ export const vi = {
     title: "Beat đang bán",
     description: "MP3 nghe thử / WAV làm bài / độc quyền giữ một mình — giá đồng Việt, giấy phép rõ.",
     emptyTitle: "Chưa có beat nào",
-    emptyDescription: "Đừng nhắn tin hỏi beat nữa — chọn gói, trả MoMo, nhận PDF và file.",
     heroEyebrow: "Sàn trung gian hai bên",
     heroTitle: "Nghe thử. Chọn gói. Nhận giấy phép.",
     heroBody:
@@ -150,6 +149,10 @@ export const vi = {
     bpm: "BPM",
     key: "Giọng",
     exclusiveOpen: "Còn độc quyền",
+    emptyCatalogTitle: "Chưa có beat đang bán",
+    emptyCatalogBody: "Producer đăng thì beat hiện ở đây. Sàn không bán beat của mình.",
+    emptyCatalogCta: "Đăng beat",
+    emptyFilter: "Không khớp bộ lọc",
   },
   footer: {
     blurb: "Sàn beat Việt Nam — kết nối nhà sản xuất và rapper, không giữ kho nhạc.",
@@ -555,7 +558,6 @@ export const en: Messages = {
     title: "Beats for sale",
     description: "MP3 to preview / WAV to work / exclusive to keep — VND pricing, clear licenses.",
     emptyTitle: "No beats yet",
-    emptyDescription: "Don't DM for beats — pick a plan, pay MoMo, get PDF and files.",
     heroEyebrow: "Two-sided marketplace",
     heroTitle: "Preview. Pick a plan. Get the license.",
     heroBody:
@@ -593,6 +595,10 @@ export const en: Messages = {
     bpm: "BPM",
     key: "Key",
     exclusiveOpen: "Exclusive available",
+    emptyCatalogTitle: "No beats for sale",
+    emptyCatalogBody: "When a producer publishes, the beat shows up here. The marketplace does not sell its own beats.",
+    emptyCatalogCta: "Upload a beat",
+    emptyFilter: "Nothing matches these filters",
   },
   footer: {
     blurb: "Vietnam beat marketplace — producers meet rappers, we don't hold the catalog.",
