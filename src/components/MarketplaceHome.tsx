@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Checkbox, Chip, Container, EmptyState } from "@/kit";
+import Link from "next/link";
+import { buttonClass, Checkbox, Chip, Container, EmptyState } from "@/kit";
 import { useT } from "@/i18n/I18nProvider";
 import { BEAT_TAGS, mockPlays, tagForTitle, type BeatTag } from "@/lib/beat-tags";
 import { BeatCard } from "./BeatCard";
@@ -62,52 +63,66 @@ export function MarketplaceHome({
         <p className="text-[15px] leading-[22px] text-muted">{t("home.heroBody")}</p>
       </header>
 
-      <div className="sticky top-[104px] z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:top-14">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-[22px] font-bold leading-7">{t("home.catalogTitle")}</h2>
-          <div className="flex gap-2 text-sm">
-            {(["new", "plays", "price"] as const).map((s) => (
-              <Chip key={s} selected={sort === s} onClick={() => setSort(s)} className="tap-target">
-                {s === "new" ? t("home.sortNew") : s === "plays" ? t("home.sortPlays") : t("home.sortPrice")}
+      {beats.length > 0 ? (
+        <>
+          <div className="sticky top-[104px] z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:top-14">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-display text-[22px] font-bold leading-7">{t("home.catalogTitle")}</h2>
+              <div className="flex gap-2 text-sm">
+                {(["new", "plays", "price"] as const).map((s) => (
+                  <Chip key={s} selected={sort === s} onClick={() => setSort(s)} className="tap-target">
+                    {s === "new" ? t("home.sortNew") : s === "plays" ? t("home.sortPlays") : t("home.sortPrice")}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Chip selected={tag === "all"} onClick={() => setTag("all")} className="tap-target shrink-0">
+                {t("home.filterAll")}
               </Chip>
-            ))}
+              {BEAT_TAGS.map((key) => (
+                <Chip key={key} selected={tag === key} onClick={() => setTag(key)} className="tap-target shrink-0">
+                  {t(`home.tag${key[0].toUpperCase()}${key.slice(1)}`)}
+                </Chip>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <Chip selected={tag === "all"} onClick={() => setTag("all")} className="tap-target shrink-0">
-            {t("home.filterAll")}
-          </Chip>
-          {BEAT_TAGS.map((key) => (
-            <Chip key={key} selected={tag === key} onClick={() => setTag(key)} className="tap-target shrink-0">
-              {t(`home.tag${key[0].toUpperCase()}${key.slice(1)}`)}
-            </Chip>
-          ))}
-        </div>
-      </div>
 
-      <details className="mb-4 rounded-md border border-border bg-surface p-3 text-sm">
-        <summary className="tap-target cursor-pointer list-none font-medium text-muted">{t("home.filters")}</summary>
-        <div className="mt-3 space-y-3">
-          <p className="text-xs text-muted">
-            {t("home.key")}: {keys.join(" · ") || "—"}
-          </p>
-          <p className="text-xs text-muted">
-            {t("home.bpm")}:{" "}
-            {beats.length ? `${Math.min(...beats.map((b) => b.bpm))}–${Math.max(...beats.map((b) => b.bpm))}` : "—"}
-          </p>
-          <Checkbox
-            className="text-muted"
-            name="exclusiveOpen"
-            checked={exclusiveOnly}
-            onChange={(e) => setExclusiveOnly(e.target.checked)}
-          >
-            {t("home.exclusiveOpen")}
-          </Checkbox>
-        </div>
-      </details>
+          <details className="mb-4 rounded-md border border-border bg-surface p-3 text-sm">
+            <summary className="tap-target cursor-pointer list-none font-medium text-muted">{t("home.filters")}</summary>
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-muted">
+                {t("home.key")}: {keys.join(" · ") || "—"}
+              </p>
+              <p className="text-xs text-muted">
+                {t("home.bpm")}: {Math.min(...beats.map((b) => b.bpm))}–{Math.max(...beats.map((b) => b.bpm))}
+              </p>
+              <Checkbox
+                className="text-muted"
+                name="exclusiveOpen"
+                checked={exclusiveOnly}
+                onChange={(e) => setExclusiveOnly(e.target.checked)}
+              >
+                {t("home.exclusiveOpen")}
+              </Checkbox>
+            </div>
+          </details>
+        </>
+      ) : null}
 
-      {filtered.length === 0 ? (
-        <EmptyState icon="music" title={t("home.emptyTitle")} description={t("home.emptyDescription")} />
+      {beats.length === 0 ? (
+        <EmptyState
+          icon="music"
+          title={t("home.emptyCatalogTitle")}
+          description={t("home.emptyCatalogBody")}
+          action={
+            <Link href="/studio/upload" className={buttonClass({ size: "sm" })}>
+              {t("home.emptyCatalogCta")}
+            </Link>
+          }
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState icon="music" title={t("home.emptyFilter")} />
       ) : (
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-4">
           {filtered.map((b, i) => (

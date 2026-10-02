@@ -150,6 +150,10 @@ export const vi = {
     bpm: "BPM",
     key: "Giọng",
     exclusiveOpen: "Còn độc quyền",
+    emptyCatalogTitle: "Chưa có beat đang bán",
+    emptyCatalogBody: "Producer đăng thì beat hiện ở đây. Sàn không bán beat của mình.",
+    emptyCatalogCta: "Đăng beat",
+    emptyFilter: "Không khớp bộ lọc",
   },
   footer: {
     blurb: "Sàn beat Việt Nam — kết nối nhà sản xuất và rapper, không giữ kho nhạc.",
@@ -593,6 +597,10 @@ export const en: Messages = {
     bpm: "BPM",
     key: "Key",
     exclusiveOpen: "Exclusive available",
+    emptyCatalogTitle: "No beats for sale",
+    emptyCatalogBody: "When a producer publishes, the beat shows up here. The marketplace does not sell its own beats.",
+    emptyCatalogCta: "Upload a beat",
+    emptyFilter: "Nothing matches these filters",
   },
   footer: {
     blurb: "Vietnam beat marketplace — producers meet rappers, we don't hold the catalog.",
