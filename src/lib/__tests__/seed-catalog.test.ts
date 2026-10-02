@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  DEMO_USER_EMAILS,
   SEED_BEATS,
   SEED_BUYER_EMAIL,
   SEED_PRODUCER_EMAILS,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/seed-catalog";
 
 describe("seed catalog identities", () => {
-  it("matches only exact title + audio + seed producer email", () => {
+  it("matches known ids or demo producer emails, not the audio path", () => {
     const row = SEED_BEATS[0];
     expect(
       isSeedCatalogBeat({
@@ -27,11 +28,26 @@ describe("seed catalog identities", () => {
         producerEmail: "real@producer.vn",
       }),
     ).toBe(false);
+    // Email alone is enough — r2 (or any other) audio URL still matches.
     expect(
       isSeedCatalogBeat({
         title: row.title,
-        audioUrl: "storage/uploads/real.mp3",
+        audioUrl: "r2:beats/x/mp3/preview.mp3",
         producerEmail: SEED_PRODUCER_EMAILS[0],
+      }),
+    ).toBe(true);
+    expect(
+      isSeedCatalogBeat({
+        id: "cmuh9wcwj0005ibr4gi9k70zq",
+        audioUrl: "r2:beats/cmuh9wcwj0005ibr4gi9k70zq/mp3/preview.mp3",
+        producerEmail: "real@producer.vn",
+      }),
+    ).toBe(true);
+    expect(
+      isSeedCatalogBeat({
+        title: row.title,
+        audioUrl: "storage/audio/type-beat-1.mp3",
+        producerEmail: "admin@rap.app",
       }),
     ).toBe(false);
   });
@@ -136,5 +152,43 @@ describe("seed catalog identities", () => {
     expect(deletedOrders).toEqual([]);
     expect(db.license.deleteMany).not.toHaveBeenCalled();
     expect(db.user.delete).not.toHaveBeenCalled();
+  });
+
+  it("never treats admin@rap.app as a demo user", () => {
+    expect(DEMO_USER_EMAILS).toEqual(["producer@rap.app", "minhprod@rap.app", "buyer@rap.app"]);
+    expect(DEMO_USER_EMAILS).not.toContain("admin@rap.app");
+  });
+
+  it("deletes a demo user only when beats, orders, and licenses are all zero", async () => {
+    const deletedUsers: string[] = [];
+    const db: SeedCleanupDb = {
+      user: {
+        findMany: async () => [],
+        findUnique: async ({ where }) =>
+          where.email === "producer@rap.app" ? { id: "prod-empty" } : where.email === "buyer@rap.app" ? { id: "buyer-busy" } : null,
+        delete: async ({ where }) => {
+          deletedUsers.push(where.id);
+        },
+      },
+      beat: {
+        findMany: async () => [],
+        update: async () => ({}),
+        delete: async () => ({}),
+        count: async ({ where }) => (where.producerId === "buyer-busy" ? 1 : 0),
+      },
+      order: {
+        findMany: async () => [],
+        deleteMany: async () => ({}),
+        count: async () => 0,
+      },
+      license: {
+        deleteMany: async () => ({}),
+        count: async () => 0,
+      },
+      auditLog: { deleteMany: async () => ({}) },
+    };
+    const result = await unlistProductionSeedCatalog(db);
+    expect(deletedUsers).toEqual(["prod-empty"]);
+    expect(result.deletedUsers).toBe(1);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEED_AUDIO_URLS, SEED_PRODUCER_EMAILS, isSeedCatalogBeat, publicCatalogWhere } from "@/lib/catalog";
+import { SEED_AUDIO_URLS, SEED_BEAT_IDS, SEED_PRODUCER_EMAILS, isSeedCatalogBeat, publicCatalogWhere } from "@/lib/catalog";
 
 const SEED_TITLES = [
   "Saigon Nights Type Beat",
@@ -22,6 +22,13 @@ describe("public catalog hides seed demos", () => {
     expect(isSeedCatalogBeat({ audioUrl: "storage/uploads/1-real.mp3", producerEmail: "MinhProd@rap.app" })).toBe(
       true,
     );
+    expect(
+      isSeedCatalogBeat({
+        id: SEED_BEAT_IDS[0],
+        audioUrl: "r2:beats/cmuh9wcwj0005ibr4gi9k70zq/mp3/preview.mp3",
+        producerEmail: "real@example.com",
+      }),
+    ).toBe(true);
   });
 
   it("keeps a beat a real producer published", () => {
@@ -36,6 +43,7 @@ describe("public catalog hides seed demos", () => {
   it("catalog where excludes seed emails and the five audio stubs", () => {
     const where = publicCatalogWhere();
     expect(where.status).toBe("available");
+    expect(where.id.notIn).toEqual([...SEED_BEAT_IDS]);
     expect(where.producer.email.notIn).toEqual([...SEED_PRODUCER_EMAILS]);
     expect(where.audioUrl.notIn).toEqual([...SEED_AUDIO_URLS]);
     expect(where).not.toHaveProperty("OR");
