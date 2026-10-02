@@ -104,6 +104,14 @@ export async function generateLicensePdf(opts: {
     y -= 6;
   }
 
+  drawLines(
+    "Rap App chỉ kết nối; không sở hữu beat, master, hay publishing. Quyền gốc vẫn của producer.",
+  );
+  drawLines(
+    "Lease MP3 là non-exclusive, chỉ file MP3 theo SKU đã mua, không phải bán đứt master.",
+  );
+  y -= 8;
+
   drawLines("TERMS (Legal MVP — fixed template)", 12, rgb(0, 0, 0), 6);
   y -= 4;
   for (const clause of LICENSE_CLAUSES) {
